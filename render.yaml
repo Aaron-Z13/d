@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: mini-chat
+    runtime: node
+    plan: free
+    buildCommand: ""
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: /var/data
+    disk:
+      name: mini-chat-data
+      mountPath: /var/data
+      sizeGB: 1

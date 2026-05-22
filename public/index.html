@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mini Chat</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="auth-screen" id="authScreen">
+        <div class="auth-card">
+          <div class="logo" aria-hidden="true">M</div>
+          <h1>Mini Chat</h1>
+          <p>注册或登录账号，在同一个网络里的其他设备也可以进入聊天。</p>
+          <form id="authForm">
+            <input id="nameInput" name="name" autocomplete="nickname" placeholder="昵称（注册时填写）" />
+            <input id="usernameInput" name="username" autocomplete="username" placeholder="账号，例如 qz" required />
+            <input id="passwordInput" name="password" autocomplete="current-password" type="password" placeholder="密码，至少 4 位" required />
+            <div class="auth-actions">
+              <button class="primary" type="submit" data-action="login">登录</button>
+              <button type="button" id="registerButton">注册</button>
+            </div>
+          </form>
+          <p class="hint" id="authHint">账号只能用英文、数字和下划线。</p>
+        </div>
+      </section>
+
+      <section class="chat-shell hidden" id="chatShell">
+        <aside class="sidebar">
+          <header class="profile">
+            <div class="avatar" id="myAvatar">M</div>
+            <div>
+              <strong id="myName">Mini</strong>
+              <span id="myUsername">@mini</span>
+            </div>
+            <button id="logoutButton" type="button">退出</button>
+          </header>
+
+          <form class="add-contact" id="addContactForm">
+            <input id="contactInput" placeholder="输入账号加好友" autocomplete="off" />
+            <button type="submit">添加</button>
+          </form>
+
+          <div class="section-title">聊天</div>
+          <div class="contacts" id="contacts"></div>
+        </aside>
+
+        <section class="conversation">
+          <header class="chat-head">
+            <button class="back-button" id="backButton" type="button">‹</button>
+            <div class="avatar small" id="peerAvatar">?</div>
+            <div>
+              <strong id="peerName">选择一个联系人</strong>
+              <span id="peerStatus">消息会自动刷新</span>
+            </div>
+          </header>
+
+          <div class="messages empty" id="messages">
+            <div class="empty-state">
+              <strong>开始聊天</strong>
+              <span>添加一个账号，或选择左侧联系人。</span>
+            </div>
+          </div>
+
+          <form class="composer" id="messageForm">
+            <input id="messageInput" placeholder="输入消息" autocomplete="off" disabled />
+            <button class="primary" type="submit" disabled id="sendButton">发送</button>
+          </form>
+        </section>
+      </section>
+
+      <div class="toast" id="toast" hidden></div>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
