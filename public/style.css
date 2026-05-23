@@ -10,6 +10,13 @@
   --blue: #0a84ff;
   --green: #32d74b;
   --shadow: rgba(0, 0, 0, 0.34);
+  --app-wallpaper:
+    radial-gradient(circle at 16% 14%, rgba(10, 132, 255, 0.22), transparent 28%),
+    radial-gradient(circle at 82% 10%, rgba(50, 215, 75, 0.16), transparent 24%),
+    linear-gradient(180deg, #101217, var(--bg));
+  --chat-wallpaper:
+    radial-gradient(circle at 78% 10%, rgba(50, 215, 75, 0.13), transparent 34%),
+    linear-gradient(145deg, rgba(8, 10, 16, 0.95), rgba(8, 18, 13, 0.85));
 }
 
 * {
@@ -20,10 +27,10 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  background:
-    radial-gradient(circle at 16% 14%, rgba(10, 132, 255, 0.22), transparent 28%),
-    radial-gradient(circle at 82% 10%, rgba(50, 215, 75, 0.16), transparent 24%),
-    linear-gradient(180deg, #101217, var(--bg));
+  background: var(--app-wallpaper);
+  background-attachment: fixed;
+  background-position: center;
+  background-size: cover;
   color: var(--ink);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
 }
@@ -154,7 +161,7 @@ input::placeholder {
 
 .sidebar {
   display: grid;
-  grid-template-rows: auto auto auto 1fr;
+  grid-template-rows: auto auto auto auto auto 1fr;
   min-width: 0;
   border-right: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.04);
@@ -203,7 +210,96 @@ input::placeholder {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 8px;
+  padding: 0 18px 10px;
+}
+
+.group-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
   padding: 0 18px 16px;
+}
+
+.group-form input:first-child {
+  grid-column: 1 / -1;
+}
+
+.wallpaper-panel {
+  padding: 0 18px 16px;
+}
+
+.wallpaper-panel .section-title {
+  padding: 0 0 8px;
+}
+
+.wallpaper-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.wallpaper-grid button {
+  min-height: 30px;
+  padding: 0 7px;
+  border-radius: 11px;
+  color: var(--soft);
+  font-size: 12px;
+}
+
+.wallpaper-grid button.active {
+  border-color: rgba(50, 215, 75, 0.58);
+  background: rgba(50, 215, 75, 0.16);
+  color: var(--ink);
+}
+
+.file-wallpaper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  margin-top: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.055);
+  color: var(--soft);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.file-wallpaper input {
+  display: none;
+}
+
+.game-panel {
+  padding: 0 18px 16px;
+}
+
+.game-panel .section-title {
+  padding: 0 0 8px;
+}
+
+.mini-game-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 48px;
+  border-color: rgba(50, 215, 75, 0.25);
+  background:
+    radial-gradient(circle at 18% 28%, rgba(50, 215, 75, 0.2), transparent 28%),
+    rgba(255, 255, 255, 0.07);
+  text-align: left;
+}
+
+.mini-game-button span,
+.mini-game-button small {
+  display: block;
+}
+
+.mini-game-button small {
+  color: var(--muted);
+  font-size: 11px;
 }
 
 .section-title {
@@ -241,6 +337,10 @@ input::placeholder {
   background: rgba(255, 255, 255, 0.09);
 }
 
+.contact.active {
+  box-shadow: inset 3px 0 0 var(--green);
+}
+
 .contact strong {
   display: block;
   color: var(--ink);
@@ -266,10 +366,21 @@ input::placeholder {
   text-align: center;
 }
 
+.group-avatar {
+  background:
+    radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.28), transparent 22%),
+    var(--avatar, linear-gradient(135deg, #bf5af2, #0a84ff));
+}
+
 .conversation {
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr auto auto;
   min-width: 0;
+  background:
+    linear-gradient(rgba(8, 9, 13, 0.22), rgba(8, 9, 13, 0.28)),
+    var(--chat-wallpaper);
+  background-position: center;
+  background-size: cover;
 }
 
 .chat-head {
@@ -297,6 +408,7 @@ input::placeholder {
   min-height: 0;
   overflow: auto;
   padding: 18px;
+  background: linear-gradient(180deg, rgba(8, 9, 13, 0.2), rgba(8, 9, 13, 0.12));
 }
 
 .messages.empty {
@@ -321,6 +433,12 @@ input::placeholder {
   max-width: min(72%, 560px);
   gap: 4px;
   align-self: start;
+}
+
+.sender {
+  padding-left: 4px;
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .message.mine {
@@ -351,10 +469,82 @@ input::placeholder {
 
 .composer {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: auto 1fr auto;
   gap: 10px;
   padding: 14px 18px 18px;
   border-top: 1px solid var(--line);
+}
+
+.sticker-toggle {
+  min-width: 58px;
+  padding: 0 12px;
+}
+
+.sticker-panel {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+  padding: 0 18px 16px;
+  background: rgba(8, 9, 13, 0.2);
+}
+
+.sticker-button {
+  display: grid;
+  min-height: 88px;
+  padding: 9px 6px;
+  place-items: center;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 35% 24%, rgba(255, 255, 255, 0.38), transparent 20%),
+    linear-gradient(145deg, color-mix(in srgb, var(--sticker-color) 68%, #ffffff), var(--sticker-color));
+  color: #08100c;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34);
+}
+
+.sticker-button:hover {
+  transform: translateY(-1px);
+}
+
+.sticker-button span,
+.sticker-bubble span {
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.sticker-button span {
+  font-size: 26px;
+}
+
+.sticker-button small {
+  color: rgba(0, 0, 0, 0.62);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.sticker-bubble {
+  display: grid;
+  width: 124px;
+  min-height: 124px;
+  padding: 16px 12px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.48), transparent 20%),
+    radial-gradient(circle at 72% 78%, color-mix(in srgb, var(--sticker-accent) 72%, transparent), transparent 34%),
+    linear-gradient(145deg, color-mix(in srgb, var(--sticker-color) 72%, #ffffff), var(--sticker-color));
+  color: #061106;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
+}
+
+.sticker-bubble span {
+  font-size: 34px;
+}
+
+.sticker-bubble small {
+  color: rgba(0, 0, 0, 0.62);
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .toast {
@@ -371,6 +561,99 @@ input::placeholder {
   box-shadow: 0 14px 50px var(--shadow);
   transform: translateX(-50%);
   backdrop-filter: blur(20px);
+}
+
+.game-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(3, 5, 8, 0.48);
+  backdrop-filter: blur(18px) saturate(150%);
+}
+
+.game-card {
+  width: min(100%, 780px);
+  max-height: calc(100vh - 44px);
+  overflow: auto;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: rgba(18, 19, 23, 0.82);
+  box-shadow: 0 32px 90px var(--shadow);
+}
+
+.game-head,
+.game-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.game-head span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.game-head h2 {
+  margin: 3px 0 0;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.game-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.game-stats div {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.game-stats span,
+.game-stats strong {
+  display: block;
+}
+
+.game-stats span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.game-stats strong {
+  margin-top: 3px;
+  font-size: 20px;
+}
+
+#fruitGame {
+  display: block;
+  width: 100%;
+  aspect-ratio: 12 / 7;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: #090b10;
+  touch-action: none;
+}
+
+.game-actions {
+  margin-top: 12px;
+}
+
+.game-actions p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 @media (max-width: 760px) {
@@ -405,5 +688,15 @@ input::placeholder {
 
   .message {
     max-width: 86%;
+  }
+
+  .game-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .game-head,
+  .game-actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
