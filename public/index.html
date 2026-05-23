@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Mini Chat</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=6" />
   </head>
   <body>
     <main class="app">
@@ -42,8 +42,36 @@
             <button type="submit">添加</button>
           </form>
 
-          <div class="section-title">聊天</div>
-          <div class="contacts" id="contacts"></div>
+          <form class="group-form" id="groupForm">
+            <input id="groupNameInput" placeholder="群名" autocomplete="off" />
+            <input id="groupMembersInput" placeholder="成员账号，用逗号分隔" autocomplete="off" />
+            <button type="submit">建群</button>
+          </form>
+
+          <section class="wallpaper-panel" aria-label="壁纸设置">
+            <div class="section-title">壁纸</div>
+            <div class="wallpaper-grid" id="wallpaperGrid">
+              <button type="button" data-wallpaper="aurora">极光</button>
+              <button type="button" data-wallpaper="mist">薄雾</button>
+              <button type="button" data-wallpaper="sunset">日落</button>
+              <button type="button" data-wallpaper="plain">纯色</button>
+            </div>
+            <label class="file-wallpaper">
+              <input id="wallpaperFileInput" type="file" accept="image/*" />
+              <span>选择自己的图片</span>
+            </label>
+          </section>
+
+          <section class="game-panel" aria-label="小游戏">
+            <div class="section-title">小游戏</div>
+            <button class="mini-game-button" id="openGameButton" type="button">
+              <span>Fruit Slasher</span>
+              <small>30 秒切水果</small>
+            </button>
+          </section>
+
+          <div class="section-title">会话</div>
+          <div class="contacts" id="threads"></div>
         </aside>
 
         <section class="conversation">
@@ -64,15 +92,39 @@
           </div>
 
           <form class="composer" id="messageForm">
+            <button class="sticker-toggle" id="stickerToggle" type="button" disabled>表情</button>
             <input id="messageInput" placeholder="输入消息" autocomplete="off" disabled />
             <button class="primary" type="submit" disabled id="sendButton">发送</button>
           </form>
+          <div class="sticker-panel hidden" id="stickerPanel" aria-label="表情包"></div>
         </section>
+      </section>
+
+      <section class="game-overlay hidden" id="gameOverlay" aria-label="Fruit Slasher mini game">
+        <article class="game-card">
+          <div class="game-head">
+            <div>
+              <span>Mini Game</span>
+              <h2>Fruit Slasher</h2>
+            </div>
+            <button id="closeGameButton" type="button">关闭</button>
+          </div>
+          <div class="game-stats">
+            <div><span>分数</span><strong id="gameScore">0</strong></div>
+            <div><span>时间</span><strong id="gameTime">30</strong></div>
+            <div><span>连击</span><strong id="gameCombo">x1</strong></div>
+          </div>
+          <canvas id="fruitGame" width="720" height="420" aria-label="Fruit Slasher canvas"></canvas>
+          <div class="game-actions">
+            <button id="restartGameButton" type="button">重新开始</button>
+            <p id="gameHint">拖动鼠标或手指划过水果，避开炸弹。</p>
+          </div>
+        </article>
       </section>
 
       <div class="toast" id="toast" hidden></div>
     </main>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=6"></script>
   </body>
 </html>
