@@ -20,15 +20,24 @@ const mimeTypes = {
 };
 
 function emptyDb() {
-  return { users: [], sessions: {}, messages: [] };
+  return { users: [], sessions: {}, messages: [], groups: [] };
 }
 
 function loadDb() {
   try {
-    return JSON.parse(fs.readFileSync(dbPath, "utf8"));
+    return normalizeDb(JSON.parse(fs.readFileSync(dbPath, "utf8")));
   } catch {
     return emptyDb();
   }
+}
+
+function normalizeDb(data) {
+  return {
+    users: Array.isArray(data.users) ? data.users : [],
+    sessions: data.sessions && typeof data.sessions === "object" ? data.sessions : {},
+    messages: Array.isArray(data.messages) ? data.messages : [],
+    groups: Array.isArray(data.groups) ? data.groups : [],
+  };
 }
 
 function saveDb(db) {
@@ -91,6 +100,10 @@ function conversationId(a, b) {
   return [a, b].sort().join(":");
 }
 
+function groupChatId(groupId) {
+  return `group:${groupId}`;
+}
+
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let raw = "";
@@ -117,6 +130,7 @@ async function handleApi(req, res, url) {
       json(res, 200, {
         ok: true,
         users: db.users.length,
+        groups: db.groups.length,
         messages: db.messages.length,
         dataDir,
       });
@@ -211,6 +225,27 @@ async function handleApi(req, res, url) {
       return;
     }
 
+    if (req.method === "GET" && url.pathname === "/api/groups") {
+      const groups = db.groups
+        .filter((group) => group.members.includes(user.id))
+        .map((group) => ({
+          id: group.id,
+          name: group.name,
+          ownerId: group.ownerId,
+          color: group.color,
+          members: group.members
+            .map((id) => db.users.find((item) => item.id === id))
+            .filter(Boolean)
+            .map(publicUser),
+          unread: unreadGroupCount(user.id, group.id),
+          lastMessage: lastGroupMessage(group.id),
+          createdAt: group.createdAt,
+        }))
+        .sort((a, b) => (b.lastMessage?.createdAt || b.createdAt || 0) - (a.lastMessage?.createdAt || a.createdAt || 0));
+      json(res, 200, { groups });
+      return;
+    }
+
     if (req.method === "POST" && url.pathname === "/api/contacts") {
       const body = await readBody(req);
       const target = db.users.find((item) => item.username === cleanUsername(body.username) || item.id === body.userId);
@@ -227,8 +262,82 @@ async function handleApi(req, res, url) {
       return;
     }
 
+    if (req.method === "POST" && url.pathname === "/api/groups") {
+      const body = await readBody(req);
+      const name = cleanName(body.name || "新群聊");
+      const usernames = Array.isArray(body.usernames)
+        ? body.usernames
+        : String(body.usernames || "").split(/[,，\s]+/);
+      const members = new Set([user.id]);
+      usernames
+        .map(cleanUsername)
+        .filter(Boolean)
+        .forEach((username) => {
+          const member = db.users.find((item) => item.username === username);
+          if (member) members.add(member.id);
+        });
+      if (!name || members.size < 2) {
+        json(res, 400, { error: "群名必填，并且至少添加 1 个有效账号。" });
+        return;
+      }
+      const group = {
+        id: crypto.randomUUID(),
+        name,
+        ownerId: user.id,
+        members: [...members],
+        color: randomColor(),
+        createdAt: Date.now(),
+      };
+      db.groups.push(group);
+      saveDb(db);
+      json(res, 201, { group });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname.match(/^\/api\/groups\/[^/]+\/members$/)) {
+      const groupId = url.pathname.split("/")[3];
+      const group = db.groups.find((item) => item.id === groupId && item.members.includes(user.id));
+      if (!group) {
+        json(res, 404, { error: "群聊不存在。" });
+        return;
+      }
+      const body = await readBody(req);
+      const target = db.users.find((item) => item.username === cleanUsername(body.username) || item.id === body.userId);
+      if (!target) {
+        json(res, 404, { error: "没有找到这个用户。" });
+        return;
+      }
+      if (!group.members.includes(target.id)) group.members.push(target.id);
+      saveDb(db);
+      json(res, 200, { group });
+      return;
+    }
+
     if (req.method === "GET" && url.pathname === "/api/messages") {
       const peerId = url.searchParams.get("peerId");
+      const groupId = url.searchParams.get("groupId");
+      if (groupId) {
+        const group = db.groups.find((item) => item.id === groupId && item.members.includes(user.id));
+        if (!group) {
+          json(res, 404, { error: "群聊不存在。" });
+          return;
+        }
+        const since = Number(url.searchParams.get("since") || 0);
+        const chatId = groupChatId(groupId);
+        const messages = db.messages
+          .filter((message) => message.chatId === chatId && message.createdAt > since)
+          .slice(-160)
+          .map(decorateMessage);
+        db.messages.forEach((message) => {
+          if (message.chatId === chatId) {
+            message.readBy ||= {};
+            message.readBy[user.id] = Date.now();
+          }
+        });
+        saveDb(db);
+        json(res, 200, { messages });
+        return;
+      }
       if (!peerId || !user.contacts.includes(peerId)) {
         json(res, 400, { error: "请选择联系人。" });
         return;
@@ -237,7 +346,8 @@ async function handleApi(req, res, url) {
       const chatId = conversationId(user.id, peerId);
       const messages = db.messages
         .filter((message) => message.chatId === chatId && message.createdAt > since)
-        .slice(-120);
+        .slice(-120)
+        .map(decorateMessage);
       db.messages.forEach((message) => {
         if (message.chatId === chatId && message.to === user.id) message.readAt ||= Date.now();
       });
@@ -249,8 +359,34 @@ async function handleApi(req, res, url) {
     if (req.method === "POST" && url.pathname === "/api/messages") {
       const body = await readBody(req);
       const to = String(body.to || "");
+      const groupId = String(body.groupId || "");
       const text = String(body.text || "").trim().slice(0, 1200);
-      if (!to || !user.contacts.includes(to) || !text) {
+      const stickerId = String(body.stickerId || "").trim().slice(0, 40);
+      const kind = stickerId ? "sticker" : "text";
+      const content = stickerId || text;
+      if (groupId) {
+        const group = db.groups.find((item) => item.id === groupId && item.members.includes(user.id));
+        if (!group || !content) {
+          json(res, 400, { error: "群聊或消息内容不正确。" });
+          return;
+        }
+        const message = {
+          id: crypto.randomUUID(),
+          chatId: groupChatId(group.id),
+          groupId: group.id,
+          from: user.id,
+          type: kind,
+          text: kind === "text" ? text : "",
+          stickerId,
+          readBy: { [user.id]: Date.now() },
+          createdAt: Date.now(),
+        };
+        db.messages.push(message);
+        saveDb(db);
+        json(res, 201, { message: decorateMessage(message) });
+        return;
+      }
+      if (!to || !user.contacts.includes(to) || !content) {
         json(res, 400, { error: "消息内容或联系人不正确。" });
         return;
       }
@@ -264,12 +400,14 @@ async function handleApi(req, res, url) {
         chatId: conversationId(user.id, to),
         from: user.id,
         to,
-        text,
+        type: kind,
+        text: kind === "text" ? text : "",
+        stickerId,
         createdAt: Date.now(),
       };
       db.messages.push(message);
       saveDb(db);
-      json(res, 201, { message });
+      json(res, 201, { message: decorateMessage(message) });
       return;
     }
 
@@ -306,7 +444,50 @@ function unreadCount(userId, peerId) {
 function lastMessage(userId, peerId) {
   const chatId = conversationId(userId, peerId);
   const message = db.messages.filter((item) => item.chatId === chatId).at(-1);
-  return message ? { text: message.text, from: message.from, createdAt: message.createdAt } : null;
+  return message
+    ? {
+        type: message.type || "text",
+        text: message.text,
+        stickerId: message.stickerId || "",
+        from: message.from,
+        senderName: senderName(message.from),
+        createdAt: message.createdAt,
+      }
+    : null;
+}
+
+function unreadGroupCount(userId, groupId) {
+  const chatId = groupChatId(groupId);
+  return db.messages.filter((message) => message.chatId === chatId && message.from !== userId && !message.readBy?.[userId]).length;
+}
+
+function lastGroupMessage(groupId) {
+  const message = db.messages.filter((item) => item.chatId === groupChatId(groupId)).at(-1);
+  return message
+    ? {
+        type: message.type || "text",
+        text: message.text,
+        stickerId: message.stickerId || "",
+        from: message.from,
+        senderName: senderName(message.from),
+        createdAt: message.createdAt,
+      }
+    : null;
+}
+
+function senderName(userId) {
+  const user = db.users.find((item) => item.id === userId);
+  return user?.name || "未知用户";
+}
+
+function decorateMessage(message) {
+  const user = db.users.find((item) => item.id === message.from);
+  return {
+    ...message,
+    senderName: user?.name || "未知用户",
+    senderUsername: user?.username || "",
+    senderColor: user?.color || "#0a84ff",
+  };
 }
 
 function serveFile(req, res, url) {
