@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Mini Chat</title>
-    <link rel="stylesheet" href="style.css?v=13" />
+    <link rel="stylesheet" href="style.css?v=14" />
   </head>
   <body>
     <main class="app">
@@ -282,6 +282,20 @@
         </article>
       </section>
 
+      <section class="share-overlay hidden" id="shareOverlay" aria-label="转发视频">
+        <article class="share-card">
+          <header class="share-head">
+            <div>
+              <span>转发</span>
+              <h2>选择聊天</h2>
+            </div>
+            <button id="closeShareButton" type="button">关闭</button>
+          </header>
+          <div class="share-preview" id="sharePreview"></div>
+          <div class="share-list" id="shareTargetList"></div>
+        </article>
+      </section>
+
       <section class="map-overlay hidden" id="mapOverlay" aria-label="Google Maps">
         <article class="map-shell">
           <header class="video-head">
@@ -308,6 +322,6 @@
       <div class="toast" id="toast" hidden></div>
     </main>
 
-    <script src="app.js?v=13"></script>
+    <script src="app.js?v=14"></script>
   </body>
 </html>
