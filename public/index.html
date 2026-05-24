@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Mini Chat</title>
-    <link rel="stylesheet" href="style.css?v=10" />
+    <link rel="stylesheet" href="style.css?v=13" />
   </head>
   <body>
     <main class="app">
@@ -75,12 +75,12 @@
             </div>
           </div>
 
+          <div class="sticker-panel hidden" id="stickerPanel" aria-label="表情包"></div>
           <form class="composer" id="messageForm">
             <button class="sticker-toggle" id="stickerToggle" type="button" disabled>表情</button>
             <input id="messageInput" placeholder="输入消息" autocomplete="off" disabled />
             <button class="primary" type="submit" disabled id="sendButton">发送</button>
           </form>
-          <div class="sticker-panel hidden" id="stickerPanel" aria-label="表情包"></div>
         </section>
       </section>
 
@@ -149,6 +149,10 @@
             </section>
             <div class="settings-list">
               <label class="switch-row">
+                <span>白色模式</span>
+                <input id="themeToggle" type="checkbox" />
+              </label>
+              <label class="switch-row">
                 <span>紧凑模式</span>
                 <input id="compactToggle" type="checkbox" />
               </label>
@@ -180,6 +184,14 @@
               <button class="mini-game-button video-button" id="openVideoButton" type="button">
                 <span>Video Feed</span>
                 <small>YouTube 刷视频</small>
+              </button>
+              <button class="mini-game-button map-button" id="openMapButton" type="button">
+                <span>Google Maps</span>
+                <small>地图搜索</small>
+              </button>
+              <button class="mini-game-button gmail-button" id="openGmailButton" type="button">
+                <span>Gmail</span>
+                <small>打开邮箱</small>
               </button>
             </div>
           </section>
@@ -222,7 +234,13 @@
             <div><span>最高</span><strong id="snakeBest">0</strong></div>
             <div><span>速度</span><strong id="snakeSpeed">1</strong></div>
           </div>
-          <canvas id="snakeGame" width="560" height="560" aria-label="Snake canvas"></canvas>
+          <canvas id="snakeGame" width="560" height="560" tabindex="0" aria-label="Snake canvas"></canvas>
+          <div class="snake-controls" aria-label="Snake controls">
+            <button type="button" data-snake-dir="0,-1">上</button>
+            <button type="button" data-snake-dir="-1,0">左</button>
+            <button type="button" data-snake-dir="1,0">右</button>
+            <button type="button" data-snake-dir="0,1">下</button>
+          </div>
           <div class="game-actions">
             <button id="restartSnakeButton" type="button">重新开始</button>
             <button id="pauseSnakeButton" type="button">暂停</button>
@@ -244,6 +262,16 @@
             <input id="videoUrlInput" placeholder="粘贴 YouTube 链接，或输入关键词搜索" autocomplete="off" />
             <button class="primary" type="submit">加入/搜索</button>
           </form>
+          <div class="video-categories" id="videoCategories" aria-label="视频分类">
+            <button type="button" data-video-query="creative coding">全部</button>
+            <button type="button" data-video-query="music">音乐</button>
+            <button type="button" data-video-query="gaming">游戏</button>
+            <button type="button" data-video-query="sports">体育</button>
+            <button type="button" data-video-query="travel">旅行</button>
+            <button type="button" data-video-query="animation">动画</button>
+            <button type="button" data-video-query="technology">科技</button>
+            <button type="button" data-video-query="learning">学习</button>
+          </div>
           <div class="video-feed" id="videoFeed"></div>
           <div class="video-actions">
             <button id="prevVideoButton" type="button">上一条</button>
@@ -254,9 +282,32 @@
         </article>
       </section>
 
+      <section class="map-overlay hidden" id="mapOverlay" aria-label="Google Maps">
+        <article class="map-shell">
+          <header class="video-head">
+            <div>
+              <span>Google</span>
+              <h2>Maps</h2>
+            </div>
+            <button id="closeMapButton" type="button">关闭</button>
+          </header>
+          <form class="video-add" id="mapSearchForm">
+            <input id="mapSearchInput" placeholder="搜索地点，例如 Tokyo Tower" autocomplete="off" />
+            <button class="primary" type="submit">搜索</button>
+          </form>
+          <iframe
+            id="mapFrame"
+            title="Google Maps"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            src="https://www.google.com/maps?q=Tokyo&output=embed"
+          ></iframe>
+        </article>
+      </section>
+
       <div class="toast" id="toast" hidden></div>
     </main>
 
-    <script src="app.js?v=10"></script>
+    <script src="app.js?v=13"></script>
   </body>
 </html>
