@@ -18,6 +18,7 @@ const profileForm = document.querySelector("#profileForm");
 const profileNameInput = document.querySelector("#profileNameInput");
 const profileStatusInput = document.querySelector("#profileStatusInput");
 const profileColorGrid = document.querySelector("#profileColorGrid");
+const themeToggle = document.querySelector("#themeToggle");
 const compactToggle = document.querySelector("#compactToggle");
 const notifyToggle = document.querySelector("#notifyToggle");
 const friendRequestList = document.querySelector("#friendRequestList");
@@ -54,11 +55,19 @@ const videoOverlay = document.querySelector("#videoOverlay");
 const closeVideoButton = document.querySelector("#closeVideoButton");
 const videoAddForm = document.querySelector("#videoAddForm");
 const videoUrlInput = document.querySelector("#videoUrlInput");
+const videoCategories = document.querySelector("#videoCategories");
 const videoFeed = document.querySelector("#videoFeed");
 const prevVideoButton = document.querySelector("#prevVideoButton");
 const nextVideoButton = document.querySelector("#nextVideoButton");
 const loadMoreVideosButton = document.querySelector("#loadMoreVideosButton");
 const resetVideosButton = document.querySelector("#resetVideosButton");
+const openMapButton = document.querySelector("#openMapButton");
+const mapOverlay = document.querySelector("#mapOverlay");
+const closeMapButton = document.querySelector("#closeMapButton");
+const mapSearchForm = document.querySelector("#mapSearchForm");
+const mapSearchInput = document.querySelector("#mapSearchInput");
+const mapFrame = document.querySelector("#mapFrame");
+const openGmailButton = document.querySelector("#openGmailButton");
 const peerAvatar = document.querySelector("#peerAvatar");
 const peerName = document.querySelector("#peerName");
 const peerStatus = document.querySelector("#peerStatus");
@@ -83,7 +92,7 @@ let lastMessageTime = 0;
 let pollTimer = null;
 let threadFilter = "";
 let profileColor = "#0a84ff";
-let appPrefs = { compact: false, notify: true };
+let appPrefs = { compact: false, notify: true, theme: "dark" };
 let friendRequests = [];
 let videoItems = [];
 let videoCustomItems = [];
@@ -152,14 +161,14 @@ let snakeTimer = 0;
 let snakeTouchStart = null;
 
 const stickerPack = [
-  { id: "sprout-hi", name: "冒芽嗨", image: "assets/stickers/sprout-hi.png" },
-  { id: "berry-laugh", name: "莓有烦恼", image: "assets/stickers/berry-laugh.png" },
-  { id: "moon-ok", name: "月亮收到", image: "assets/stickers/moon-ok.png" },
-  { id: "toast-wow", name: "烤焦震惊", image: "assets/stickers/toast-wow.png" },
-  { id: "cloud-sleep", name: "云朵困了", image: "assets/stickers/cloud-sleep.png" },
-  { id: "star-fire", name: "星星发光", image: "assets/stickers/star-fire.png" },
-  { id: "ice-calm", name: "冰镇淡定", image: "assets/stickers/ice-calm.png" },
-  { id: "grape-shy", name: "葡萄害羞", image: "assets/stickers/grape-shy.png" },
+  { id: "sprout-hi", name: "冒芽嗨", icon: "hi", image: "assets/stickers/sprout-hi.png" },
+  { id: "berry-laugh", name: "莓有烦恼", icon: "berry", image: "assets/stickers/berry-laugh.png" },
+  { id: "moon-ok", name: "月亮收到", icon: "ok", image: "assets/stickers/moon-ok.png" },
+  { id: "toast-wow", name: "烤焦震惊", icon: "wow", image: "assets/stickers/toast-wow.png" },
+  { id: "cloud-sleep", name: "云朵困了", icon: "zzz", image: "assets/stickers/cloud-sleep.png" },
+  { id: "star-fire", name: "星星发光", icon: "fire", image: "assets/stickers/star-fire.png" },
+  { id: "ice-calm", name: "冰镇淡定", icon: "ice", image: "assets/stickers/ice-calm.png" },
+  { id: "grape-shy", name: "葡萄害羞", icon: "shy", image: "assets/stickers/grape-shy.png" },
 ];
 
 const defaultVideos = [
@@ -256,15 +265,29 @@ function saveWallpaperSetting(preset, custom = "") {
 
 function applyWallpaper(preset, custom = "") {
   const root = document.documentElement;
+  const light = appPrefs.theme === "light";
   if (preset === "custom" && custom) {
     const image = `url("${custom}")`;
     root.style.setProperty(
       "--app-wallpaper",
-      `linear-gradient(rgba(8, 9, 13, 0.32), rgba(8, 9, 13, 0.76)), ${image}`
+      light
+        ? `linear-gradient(rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.72)), ${image}`
+        : `linear-gradient(rgba(8, 9, 13, 0.32), rgba(8, 9, 13, 0.76)), ${image}`
     );
     root.style.setProperty(
       "--chat-wallpaper",
-      `linear-gradient(rgba(8, 9, 13, 0.46), rgba(8, 9, 13, 0.52)), ${image}`
+      light
+        ? `linear-gradient(rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.62)), ${image}`
+        : `linear-gradient(rgba(8, 9, 13, 0.46), rgba(8, 9, 13, 0.52)), ${image}`
+    );
+  } else if (light) {
+    root.style.setProperty(
+      "--app-wallpaper",
+      "radial-gradient(circle at 16% 14%, rgba(10, 132, 255, 0.18), transparent 28%), radial-gradient(circle at 82% 12%, rgba(50, 215, 75, 0.15), transparent 24%), linear-gradient(180deg, #f7faff, #eaf0f8)"
+    );
+    root.style.setProperty(
+      "--chat-wallpaper",
+      "radial-gradient(circle at 78% 10%, rgba(50, 215, 75, 0.14), transparent 34%), linear-gradient(145deg, rgba(252, 254, 255, 0.95), rgba(236, 245, 240, 0.9))"
     );
   } else {
     const wallpaper = wallpaperPresets[preset] || wallpaperPresets.aurora;
@@ -286,9 +309,10 @@ function loadPrefs() {
     return {
       compact: localStorage.getItem("mini-chat-compact") === "1",
       notify: localStorage.getItem("mini-chat-notify") !== "0",
+      theme: localStorage.getItem("mini-chat-theme") || "dark",
     };
   } catch {
-    return { compact: false, notify: true };
+    return { compact: false, notify: true, theme: "dark" };
   }
 }
 
@@ -296,6 +320,7 @@ function savePrefs() {
   try {
     localStorage.setItem("mini-chat-compact", appPrefs.compact ? "1" : "0");
     localStorage.setItem("mini-chat-notify", appPrefs.notify ? "1" : "0");
+    localStorage.setItem("mini-chat-theme", appPrefs.theme || "dark");
   } catch {
     return;
   }
@@ -303,8 +328,12 @@ function savePrefs() {
 
 function applyPrefs() {
   document.body.classList.toggle("compact", appPrefs.compact);
+  document.body.classList.toggle("light-theme", appPrefs.theme === "light");
+  if (themeToggle) themeToggle.checked = appPrefs.theme === "light";
   if (compactToggle) compactToggle.checked = appPrefs.compact;
   if (notifyToggle) notifyToggle.checked = appPrefs.notify;
+  const wallpaper = loadWallpaperSetting();
+  applyWallpaper(wallpaper.preset, wallpaper.custom);
 }
 
 async function boot() {
@@ -505,7 +534,9 @@ function appendMessage(message) {
   item.dataset.search = `${message.senderName || ""} ${sticker ? sticker.name : message.text || ""}`.toLowerCase();
   const body = sticker
     ? `<div class="sticker-bubble">
-        <img src="${escapeHtml(sticker.image)}" alt="${escapeHtml(sticker.name)}" />
+        <span class="sticker-art sticker-${escapeHtml(sticker.id)}" data-icon="${escapeHtml(sticker.icon)}">
+          <img src="${escapeHtml(sticker.image)}" alt="${escapeHtml(sticker.name)}" loading="lazy" onerror="this.remove()" />
+        </span>
         <small>${escapeHtml(sticker.name)}</small>
       </div>`
     : `<div class="bubble">${escapeHtml(message.text)}</div>`;
@@ -571,7 +602,9 @@ function renderStickerPanel() {
           data-sticker-id="${escapeHtml(sticker.id)}"
           aria-label="${escapeHtml(sticker.name)}"
         >
-          <img src="${escapeHtml(sticker.image)}" alt="" />
+          <span class="sticker-art sticker-${escapeHtml(sticker.id)}" data-icon="${escapeHtml(sticker.icon)}">
+            <img src="${escapeHtml(sticker.image)}" alt="" loading="lazy" onerror="this.remove()" />
+          </span>
           <small>${escapeHtml(sticker.name)}</small>
         </button>
       `
@@ -899,9 +932,12 @@ function openSnakeGame() {
   closeSettings();
   snakeOverlay.classList.remove("hidden");
   snakeBest = loadSnakeBest();
-  resizeSnakeCanvas();
-  resetSnakeGame();
-  startSnakeLoop();
+  requestAnimationFrame(() => {
+    resizeSnakeCanvas();
+    resetSnakeGame();
+    startSnakeLoop();
+    snakeGame.focus?.();
+  });
 }
 
 function closeSnakeGame() {
@@ -913,8 +949,9 @@ function closeSnakeGame() {
 function resizeSnakeCanvas() {
   const rect = snakeGame.getBoundingClientRect();
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
-  snakeGame.width = Math.max(1, Math.floor(rect.width * ratio));
-  snakeGame.height = Math.max(1, Math.floor(rect.height * ratio));
+  const size = Math.max(260, Math.floor(Math.min(rect.width, rect.height || rect.width)));
+  snakeGame.width = Math.max(1, Math.floor(size * ratio));
+  snakeGame.height = Math.max(1, Math.floor(size * ratio));
   snakeCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
   drawSnakeGame();
 }
@@ -996,7 +1033,8 @@ function drawSnakeGame() {
   if (!snakeGame || !snakeCtx) return;
   const size = Math.min(snakeGame.clientWidth, snakeGame.clientHeight);
   const cell = size / 20;
-  snakeCtx.clearRect(0, 0, snakeGame.clientWidth, snakeGame.clientHeight);
+  if (!size) return;
+  snakeCtx.clearRect(0, 0, size, size);
   const bg = snakeCtx.createLinearGradient(0, 0, size, size);
   bg.addColorStop(0, "#111722");
   bg.addColorStop(1, "#07130c");
@@ -1031,13 +1069,29 @@ function drawSnakeGame() {
   if (!snakeRunning) {
     snakeCtx.fillStyle = "rgba(0,0,0,0.52)";
     snakeCtx.fillRect(0, 0, size, size);
-    snakeCtx.fillStyle = "#fff";
+  snakeCtx.fillStyle = "#fff";
     snakeCtx.font = "700 24px -apple-system, BlinkMacSystemFont, sans-serif";
     snakeCtx.textAlign = "center";
     snakeCtx.fillText("游戏结束", size / 2, size / 2 - 8);
     snakeCtx.font = "500 14px -apple-system, BlinkMacSystemFont, sans-serif";
     snakeCtx.fillText("点击重新开始再来一局", size / 2, size / 2 + 22);
   }
+}
+
+function openMapTool() {
+  closeSettings();
+  mapOverlay?.classList.remove("hidden");
+  mapSearchInput?.focus();
+}
+
+function closeMapTool() {
+  mapOverlay?.classList.add("hidden");
+}
+
+function updateMap(query) {
+  if (!mapFrame) return;
+  const place = encodeURIComponent(query || "Tokyo");
+  mapFrame.src = `https://www.google.com/maps?q=${place}&output=embed`;
 }
 
 function roundRect(ctx, x, y, width, height, radius) {
@@ -1151,9 +1205,11 @@ async function loadYouTubeVideos({ append = true, query = videoQuery } = {}) {
 }
 
 function scrollVideo(direction) {
-  const current = Math.round(videoFeed.scrollTop / Math.max(1, videoFeed.clientHeight));
+  const card = videoFeed.querySelector(".video-card");
+  const step = card ? card.getBoundingClientRect().height + 22 : videoFeed.clientHeight;
+  const current = Math.round(videoFeed.scrollTop / Math.max(1, step));
   const next = Math.max(0, Math.min(videoItems.length - 1, current + direction));
-  videoFeed.scrollTo({ top: next * videoFeed.clientHeight, behavior: "smooth" });
+  videoFeed.scrollTo({ top: next * step, behavior: "smooth" });
   if (videoItems.length - next < 3) loadYouTubeVideos({ append: true });
 }
 
@@ -1311,6 +1367,12 @@ compactToggle?.addEventListener("change", () => {
   applyPrefs();
 });
 
+themeToggle?.addEventListener("change", () => {
+  appPrefs.theme = themeToggle.checked ? "light" : "dark";
+  savePrefs();
+  applyPrefs();
+});
+
 notifyToggle?.addEventListener("change", () => {
   appPrefs.notify = notifyToggle.checked;
   savePrefs();
@@ -1394,6 +1456,20 @@ resetVideosButton?.addEventListener("click", () => {
   showToast("视频流已重置。");
 });
 
+videoCategories?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-video-query]");
+  if (!button) return;
+  videoCategories.querySelectorAll("[data-video-query]").forEach((item) => {
+    item.classList.toggle("active", item === button);
+  });
+  videoQuery = button.dataset.videoQuery || "creative coding";
+  videoNextPageToken = "";
+  videoApiEnabled = true;
+  videoItems = [...videoCustomItems];
+  renderVideoFeed();
+  loadYouTubeVideos({ append: false, query: videoQuery });
+});
+
 videoAddForm?.addEventListener("submit", (event) => {
   event.preventDefault();
   const id = parseYouTubeId(videoUrlInput.value);
@@ -1424,6 +1500,20 @@ videoFeed?.addEventListener("scroll", () => {
   if (videoFeed.scrollTop + videoFeed.clientHeight * 2 >= videoFeed.scrollHeight) {
     loadYouTubeVideos({ append: true });
   }
+});
+
+openMapButton?.addEventListener("click", openMapTool);
+closeMapButton?.addEventListener("click", closeMapTool);
+mapOverlay?.addEventListener("click", (event) => {
+  if (event.target === mapOverlay) closeMapTool();
+});
+mapSearchForm?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  updateMap(mapSearchInput.value.trim());
+});
+openGmailButton?.addEventListener("click", () => {
+  window.open("https://mail.google.com/", "_blank", "noopener,noreferrer");
+  showToast("Gmail 会在新标签页打开，Google 不允许把邮箱直接嵌进第三方网页。");
 });
 
 window.addEventListener("keydown", (event) => {
@@ -1461,6 +1551,13 @@ snakeGame?.addEventListener("pointerup", (event) => {
   }
 });
 
+document.querySelector(".snake-controls")?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-snake-dir]");
+  if (!button) return;
+  const [x, y] = button.dataset.snakeDir.split(",").map(Number);
+  setSnakeDirection(x, y);
+});
+
 fruitGame?.addEventListener("pointerdown", (event) => {
   fruitPointerDown = true;
   fruitGame.setPointerCapture?.(event.pointerId);
@@ -1484,7 +1581,6 @@ window.addEventListener("resize", () => {
   if (!snakeOverlay?.classList.contains("hidden")) resizeSnakeCanvas();
 });
 
-initializeWallpaper();
 appPrefs = loadPrefs();
 applyPrefs();
 renderStickerPanel();
