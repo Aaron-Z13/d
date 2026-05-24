@@ -61,6 +61,10 @@ const prevVideoButton = document.querySelector("#prevVideoButton");
 const nextVideoButton = document.querySelector("#nextVideoButton");
 const loadMoreVideosButton = document.querySelector("#loadMoreVideosButton");
 const resetVideosButton = document.querySelector("#resetVideosButton");
+const shareOverlay = document.querySelector("#shareOverlay");
+const closeShareButton = document.querySelector("#closeShareButton");
+const sharePreview = document.querySelector("#sharePreview");
+const shareTargetList = document.querySelector("#shareTargetList");
 const openMapButton = document.querySelector("#openMapButton");
 const mapOverlay = document.querySelector("#mapOverlay");
 const closeMapButton = document.querySelector("#closeMapButton");
@@ -100,6 +104,7 @@ let videoQuery = "creative coding";
 let videoNextPageToken = "";
 let videoLoading = false;
 let videoApiEnabled = true;
+let pendingShareVideo = null;
 
 const wallpaperPresets = {
   aurora: {
@@ -1168,10 +1173,68 @@ function renderVideoFeed() {
             <strong>${escapeHtml(item.title || "YouTube 视频")}</strong>
             <span>${escapeHtml(item.note || "来自 YouTube")}</span>
           </div>
+          <button class="video-share-button" type="button" data-video-share="${index}">转发</button>
         </section>
       `
     )
     .join("");
+}
+
+function videoShareText(item) {
+  return `分享一个 YouTube 视频：${item.title || "YouTube 视频"} https://www.youtube.com/watch?v=${item.id}`;
+}
+
+function openShareDialog(item) {
+  if (!item) return;
+  pendingShareVideo = item;
+  const targets = [
+    ...contacts.map((contact) => ({ ...contact, type: "direct" })),
+    ...groups.map((group) => ({ ...group, type: "group" })),
+  ];
+  sharePreview.innerHTML = `
+    <strong>${escapeHtml(item.title || "YouTube 视频")}</strong>
+    <span>https://www.youtube.com/watch?v=${escapeHtml(item.id)}</span>
+  `;
+  shareTargetList.innerHTML = targets.length
+    ? targets
+        .map(
+          (target) => `
+            <button class="share-target" type="button" data-share-type="${target.type}" data-share-id="${escapeHtml(target.id)}">
+              <span class="avatar small ${target.type === "group" ? "group-avatar" : ""}" style="--avatar:${avatarBg(target)}">${escapeHtml(initials(target))}</span>
+              <span>
+                <strong>${escapeHtml(target.name || target.username || "聊天")}</strong>
+                <small>${target.type === "group" ? "群聊" : `@${escapeHtml(target.username || "")}`}</small>
+              </span>
+            </button>
+          `
+        )
+        .join("")
+    : `<div class="empty-state"><strong>还没有可转发的聊天</strong><span>先添加好友或创建群聊。</span></div>`;
+  shareOverlay.classList.remove("hidden");
+}
+
+function closeShareDialog() {
+  shareOverlay.classList.add("hidden");
+  pendingShareVideo = null;
+}
+
+async function shareVideoToTarget(type, id) {
+  if (!pendingShareVideo) return;
+  const payload =
+    type === "group"
+      ? { groupId: id, text: videoShareText(pendingShareVideo) }
+      : { to: id, text: videoShareText(pendingShareVideo) };
+  try {
+    await api("/api/messages", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    closeShareDialog();
+    showToast("已转发视频。");
+    await loadThreads();
+  } catch (error) {
+    showToast(error.message);
+  }
 }
 
 async function loadYouTubeVideos({ append = true, query = videoQuery } = {}) {
@@ -1468,6 +1531,23 @@ videoCategories?.addEventListener("click", (event) => {
   videoItems = [...videoCustomItems];
   renderVideoFeed();
   loadYouTubeVideos({ append: false, query: videoQuery });
+});
+
+videoFeed?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-video-share]");
+  if (!button) return;
+  const item = videoItems[Number(button.dataset.videoShare)];
+  openShareDialog(item);
+});
+
+closeShareButton?.addEventListener("click", closeShareDialog);
+shareOverlay?.addEventListener("click", (event) => {
+  if (event.target === shareOverlay) closeShareDialog();
+});
+shareTargetList?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-share-type][data-share-id]");
+  if (!button) return;
+  shareVideoToTarget(button.dataset.shareType, button.dataset.shareId);
 });
 
 videoAddForm?.addEventListener("submit", (event) => {
