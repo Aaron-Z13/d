@@ -1,6 +1,6 @@
 # Mini Chat
 
-一个可以部署到公网的小聊天软件。支持注册、登录、添加好友、私聊、群聊、原创表情包、聊天壁纸、内置 Fruit Slasher 小游戏、未读提示和移动端界面。
+一个可以部署到公网的小聊天软件。支持注册、登录、好友申请审核、私聊、群聊、AI 生成图片表情包、YouTube 视频流、聊天壁纸、个人资料编辑、聊天搜索、紧凑模式、内置 Fruit Slasher 和 Snake 小游戏、未读提示和移动端界面。
 
 ## 本地运行
 
@@ -50,6 +50,16 @@ DATA_DIR=/var/data
 ```
 
 返回服务状态、用户数量、消息数量和当前数据目录。
+
+## YouTube 视频流
+
+Render 环境变量里设置：
+
+```text
+YOUTUBE_API_KEY=你的 YouTube Data API v3 key
+```
+
+设置后，视频流会通过 `/api/videos` 从 YouTube Data API 自动搜索和追加视频。没有设置时会使用内置视频列表兜底。
 
 ## 注意
 
