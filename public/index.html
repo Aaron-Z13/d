@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Mini Chat</title>
-    <link rel="stylesheet" href="style.css?v=6" />
+    <link rel="stylesheet" href="style.css?v=10" />
   </head>
   <body>
     <main class="app">
@@ -34,7 +34,10 @@
               <strong id="myName">Mini</strong>
               <span id="myUsername">@mini</span>
             </div>
-            <button id="logoutButton" type="button">退出</button>
+            <div class="profile-actions">
+              <button id="openSettingsButton" type="button" aria-label="设置">设置</button>
+              <button id="logoutButton" type="button">退出</button>
+            </div>
           </header>
 
           <form class="add-contact" id="addContactForm">
@@ -42,35 +45,8 @@
             <button type="submit">添加</button>
           </form>
 
-          <form class="group-form" id="groupForm">
-            <input id="groupNameInput" placeholder="群名" autocomplete="off" />
-            <input id="groupMembersInput" placeholder="成员账号，用逗号分隔" autocomplete="off" />
-            <button type="submit">建群</button>
-          </form>
-
-          <section class="wallpaper-panel" aria-label="壁纸设置">
-            <div class="section-title">壁纸</div>
-            <div class="wallpaper-grid" id="wallpaperGrid">
-              <button type="button" data-wallpaper="aurora">极光</button>
-              <button type="button" data-wallpaper="mist">薄雾</button>
-              <button type="button" data-wallpaper="sunset">日落</button>
-              <button type="button" data-wallpaper="plain">纯色</button>
-            </div>
-            <label class="file-wallpaper">
-              <input id="wallpaperFileInput" type="file" accept="image/*" />
-              <span>选择自己的图片</span>
-            </label>
-          </section>
-
-          <section class="game-panel" aria-label="小游戏">
-            <div class="section-title">小游戏</div>
-            <button class="mini-game-button" id="openGameButton" type="button">
-              <span>Fruit Slasher</span>
-              <small>30 秒切水果</small>
-            </button>
-          </section>
-
           <div class="section-title">会话</div>
+          <input class="thread-search" id="threadSearchInput" placeholder="搜索会话" autocomplete="off" />
           <div class="contacts" id="threads"></div>
         </aside>
 
@@ -82,7 +58,15 @@
               <strong id="peerName">选择一个联系人</strong>
               <span id="peerStatus">消息会自动刷新</span>
             </div>
+            <div class="chat-actions">
+              <button id="toggleSearchButton" type="button" disabled>搜索</button>
+            </div>
           </header>
+
+          <div class="message-search hidden" id="messageSearchBar">
+            <input id="messageSearchInput" placeholder="搜索当前聊天内容" autocomplete="off" />
+            <button id="clearMessageSearchButton" type="button">清除</button>
+          </div>
 
           <div class="messages empty" id="messages">
             <div class="empty-state">
@@ -98,6 +82,108 @@
           </form>
           <div class="sticker-panel hidden" id="stickerPanel" aria-label="表情包"></div>
         </section>
+      </section>
+
+      <section class="settings-overlay hidden" id="settingsOverlay" aria-label="设置">
+        <article class="settings-card">
+          <header class="settings-head">
+            <div>
+              <span>Mini Chat</span>
+              <h2>设置</h2>
+            </div>
+            <button id="closeSettingsButton" type="button">关闭</button>
+          </header>
+
+          <nav class="settings-tabs" aria-label="设置分类">
+            <button class="active" type="button" data-settings-tab="profile">账号</button>
+            <button type="button" data-settings-tab="friends">好友</button>
+            <button type="button" data-settings-tab="appearance">外观</button>
+            <button type="button" data-settings-tab="groups">群聊</button>
+            <button type="button" data-settings-tab="tools">工具</button>
+          </nav>
+
+          <section class="settings-panel active" data-settings-panel="profile">
+            <form class="settings-form" id="profileForm">
+              <label>
+                <span>昵称</span>
+                <input id="profileNameInput" placeholder="昵称" autocomplete="nickname" />
+              </label>
+              <label>
+                <span>状态</span>
+                <input id="profileStatusInput" placeholder="例如：在线" autocomplete="off" />
+              </label>
+              <div>
+                <span class="field-title">头像颜色</span>
+                <div class="color-grid" id="profileColorGrid">
+                  <button type="button" data-profile-color="#0a84ff" style="--swatch:#0a84ff"></button>
+                  <button type="button" data-profile-color="#32d74b" style="--swatch:#32d74b"></button>
+                  <button type="button" data-profile-color="#ff9f0a" style="--swatch:#ff9f0a"></button>
+                  <button type="button" data-profile-color="#bf5af2" style="--swatch:#bf5af2"></button>
+                  <button type="button" data-profile-color="#ff375f" style="--swatch:#ff375f"></button>
+                </div>
+              </div>
+              <button class="primary" type="submit">保存资料</button>
+            </form>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="friends">
+            <div class="section-title">好友申请</div>
+            <div class="request-list" id="friendRequestList">
+              <div class="empty-state"><span>暂无好友申请。</span></div>
+            </div>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="appearance">
+            <section class="wallpaper-panel" aria-label="壁纸设置">
+              <div class="section-title">壁纸</div>
+              <div class="wallpaper-grid" id="wallpaperGrid">
+                <button type="button" data-wallpaper="aurora">极光</button>
+                <button type="button" data-wallpaper="mist">薄雾</button>
+                <button type="button" data-wallpaper="sunset">日落</button>
+                <button type="button" data-wallpaper="plain">纯色</button>
+              </div>
+              <label class="file-wallpaper">
+                <input id="wallpaperFileInput" type="file" accept="image/*" />
+                <span>选择自己的图片</span>
+              </label>
+            </section>
+            <div class="settings-list">
+              <label class="switch-row">
+                <span>紧凑模式</span>
+                <input id="compactToggle" type="checkbox" />
+              </label>
+              <label class="switch-row">
+                <span>新消息提示</span>
+                <input id="notifyToggle" type="checkbox" />
+              </label>
+            </div>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="groups">
+            <form class="group-form" id="groupForm">
+              <input id="groupNameInput" placeholder="群名" autocomplete="off" />
+              <input id="groupMembersInput" placeholder="成员账号，用逗号分隔" autocomplete="off" />
+              <button class="primary" type="submit">创建群聊</button>
+            </form>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="tools">
+            <div class="tool-grid">
+              <button class="mini-game-button" id="openGameButton" type="button">
+                <span>Fruit Slasher</span>
+                <small>30 秒切水果</small>
+              </button>
+              <button class="mini-game-button snake-button" id="openSnakeButton" type="button">
+                <span>Snake</span>
+                <small>吃苹果，别撞墙</small>
+              </button>
+              <button class="mini-game-button video-button" id="openVideoButton" type="button">
+                <span>Video Feed</span>
+                <small>YouTube 刷视频</small>
+              </button>
+            </div>
+          </section>
+        </article>
       </section>
 
       <section class="game-overlay hidden" id="gameOverlay" aria-label="Fruit Slasher mini game">
@@ -122,9 +208,55 @@
         </article>
       </section>
 
+      <section class="game-overlay hidden" id="snakeOverlay" aria-label="Snake mini game">
+        <article class="game-card snake-card">
+          <div class="game-head">
+            <div>
+              <span>Mini Game</span>
+              <h2>Snake</h2>
+            </div>
+            <button id="closeSnakeButton" type="button">关闭</button>
+          </div>
+          <div class="game-stats">
+            <div><span>分数</span><strong id="snakeScore">0</strong></div>
+            <div><span>最高</span><strong id="snakeBest">0</strong></div>
+            <div><span>速度</span><strong id="snakeSpeed">1</strong></div>
+          </div>
+          <canvas id="snakeGame" width="560" height="560" aria-label="Snake canvas"></canvas>
+          <div class="game-actions">
+            <button id="restartSnakeButton" type="button">重新开始</button>
+            <button id="pauseSnakeButton" type="button">暂停</button>
+            <p id="snakeHint">方向键或滑动控制，吃到苹果会加速。</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="video-overlay hidden" id="videoOverlay" aria-label="Video Feed">
+        <article class="video-shell">
+          <header class="video-head">
+            <div>
+              <span>Video Feed</span>
+              <h2>YouTube</h2>
+            </div>
+            <button id="closeVideoButton" type="button">关闭</button>
+          </header>
+          <form class="video-add" id="videoAddForm">
+            <input id="videoUrlInput" placeholder="粘贴 YouTube 链接，或输入关键词搜索" autocomplete="off" />
+            <button class="primary" type="submit">加入/搜索</button>
+          </form>
+          <div class="video-feed" id="videoFeed"></div>
+          <div class="video-actions">
+            <button id="prevVideoButton" type="button">上一条</button>
+            <button id="nextVideoButton" type="button">下一条</button>
+            <button id="loadMoreVideosButton" type="button">加载更多</button>
+            <button id="resetVideosButton" type="button">重置</button>
+          </div>
+        </article>
+      </section>
+
       <div class="toast" id="toast" hidden></div>
     </main>
 
-    <script src="app.js?v=6"></script>
+    <script src="app.js?v=10"></script>
   </body>
 </html>
