@@ -1,4 +1,5 @@
 const http = require("node:http");
+const https = require("node:https");
 const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
@@ -8,6 +9,7 @@ const port = Number(process.env.PORT || 3000);
 const publicDir = path.join(__dirname, "public");
 const dataDir = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(__dirname, "data");
 const dbPath = path.join(dataDir, "db.json");
+const youtubeApiKey = process.env.YOUTUBE_API_KEY || "";
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -20,7 +22,7 @@ const mimeTypes = {
 };
 
 function emptyDb() {
-  return { users: [], sessions: {}, messages: [], groups: [] };
+  return { users: [], sessions: {}, messages: [], groups: [], friendRequests: [] };
 }
 
 function loadDb() {
@@ -37,6 +39,7 @@ function normalizeDb(data) {
     sessions: data.sessions && typeof data.sessions === "object" ? data.sessions : {},
     messages: Array.isArray(data.messages) ? data.messages : [],
     groups: Array.isArray(data.groups) ? data.groups : [],
+    friendRequests: Array.isArray(data.friendRequests) ? data.friendRequests : [],
   };
 }
 
@@ -96,12 +99,32 @@ function publicUser(user) {
   };
 }
 
+function publicFriendRequest(request) {
+  return {
+    id: request.id,
+    from: request.from,
+    to: request.to,
+    status: request.status,
+    createdAt: request.createdAt,
+    respondedAt: request.respondedAt || 0,
+    fromUser: publicUser(db.users.find((user) => user.id === request.from) || { id: request.from, name: "未知用户", username: "", color: "#8e8e93" }),
+    toUser: publicUser(db.users.find((user) => user.id === request.to) || { id: request.to, name: "未知用户", username: "", color: "#8e8e93" }),
+  };
+}
+
 function conversationId(a, b) {
   return [a, b].sort().join(":");
 }
 
 function groupChatId(groupId) {
   return `group:${groupId}`;
+}
+
+function addMutualContact(a, b) {
+  a.contacts ||= [];
+  b.contacts ||= [];
+  if (!a.contacts.includes(b.id)) a.contacts.push(b.id);
+  if (!b.contacts.includes(a.id)) b.contacts.push(a.id);
 }
 
 function readBody(req) {
@@ -124,6 +147,62 @@ function readBody(req) {
   });
 }
 
+function httpsJson(url) {
+  return new Promise((resolve, reject) => {
+    https
+      .get(url, (response) => {
+        let raw = "";
+        response.on("data", (chunk) => {
+          raw += chunk;
+          if (raw.length > 2_000_000) {
+            reject(new Error("YouTube response too large"));
+            response.destroy();
+          }
+        });
+        response.on("end", () => {
+          try {
+            const data = JSON.parse(raw || "{}");
+            if (response.statusCode < 200 || response.statusCode >= 300) {
+              reject(new Error(data.error?.message || "YouTube API 请求失败。"));
+              return;
+            }
+            resolve(data);
+          } catch {
+            reject(new Error("YouTube API 返回格式不正确。"));
+          }
+        });
+      })
+      .on("error", () => reject(new Error("无法连接 YouTube API。")));
+  });
+}
+
+async function searchYouTubeVideos(query, pageToken = "") {
+  const params = new URLSearchParams({
+    key: youtubeApiKey,
+    part: "snippet",
+    type: "video",
+    maxResults: "8",
+    q: query,
+    safeSearch: "moderate",
+    videoEmbeddable: "true",
+  });
+  if (pageToken) params.set("pageToken", pageToken);
+  const data = await httpsJson(`https://www.googleapis.com/youtube/v3/search?${params.toString()}`);
+  const videos = (data.items || [])
+    .map((item) => ({
+      id: item.id?.videoId || "",
+      title: cleanText(item.snippet?.title || "YouTube 视频", 90),
+      note: cleanText(item.snippet?.channelTitle || "来自 YouTube", 80),
+      thumbnail: item.snippet?.thumbnails?.medium?.url || item.snippet?.thumbnails?.default?.url || "",
+    }))
+    .filter((item) => /^[a-zA-Z0-9_-]{11}$/.test(item.id));
+  return {
+    videos,
+    nextPageToken: data.nextPageToken || "",
+    query,
+  };
+}
+
 async function handleApi(req, res, url) {
   try {
     if (req.method === "GET" && url.pathname === "/api/health") {
@@ -133,6 +212,7 @@ async function handleApi(req, res, url) {
         groups: db.groups.length,
         messages: db.messages.length,
         dataDir,
+        youtubeConfigured: Boolean(youtubeApiKey),
       });
       return;
     }
@@ -200,6 +280,23 @@ async function handleApi(req, res, url) {
       return;
     }
 
+    if (req.method === "PATCH" && url.pathname === "/api/me") {
+      const body = await readBody(req);
+      const name = cleanName(body.name || user.name);
+      const status = cleanStatus(body.status || user.status || "在线");
+      const color = cleanColor(body.color || user.color);
+      if (!name) {
+        json(res, 400, { error: "昵称不能为空。" });
+        return;
+      }
+      user.name = name;
+      user.status = status;
+      user.color = color;
+      saveDb(db);
+      json(res, 200, { user: publicUser(user) });
+      return;
+    }
+
     if (req.method === "GET" && url.pathname === "/api/users") {
       const query = cleanUsername(url.searchParams.get("q") || "");
       const users = db.users
@@ -208,6 +305,27 @@ async function handleApi(req, res, url) {
         .slice(0, 20)
         .map(publicUser);
       json(res, 200, { users });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/friend-requests") {
+      const requests = db.friendRequests
+        .filter((request) => request.status === "pending" && (request.from === user.id || request.to === user.id))
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .map(publicFriendRequest);
+      json(res, 200, { requests });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/videos") {
+      if (!youtubeApiKey) {
+        json(res, 503, { error: "还没有配置 YOUTUBE_API_KEY。" });
+        return;
+      }
+      const query = cleanVideoQuery(url.searchParams.get("q") || "creative coding");
+      const pageToken = cleanPageToken(url.searchParams.get("pageToken") || "");
+      const data = await searchYouTubeVideos(query, pageToken);
+      json(res, 200, data);
       return;
     }
 
@@ -255,10 +373,71 @@ async function handleApi(req, res, url) {
       }
       user.contacts ||= [];
       target.contacts ||= [];
-      if (!user.contacts.includes(target.id)) user.contacts.push(target.id);
-      if (!target.contacts.includes(user.id)) target.contacts.push(user.id);
+      if (user.contacts.includes(target.id)) {
+        json(res, 200, { status: "already", contact: publicUser(target) });
+        return;
+      }
+      const reverseRequest = db.friendRequests.find(
+        (request) => request.from === target.id && request.to === user.id && request.status === "pending"
+      );
+      if (reverseRequest) {
+        reverseRequest.status = "accepted";
+        reverseRequest.respondedAt = Date.now();
+        addMutualContact(user, target);
+        saveDb(db);
+        json(res, 200, { status: "accepted", contact: publicUser(target) });
+        return;
+      }
+      const existingRequest = db.friendRequests.find(
+        (request) => request.from === user.id && request.to === target.id && request.status === "pending"
+      );
+      if (existingRequest) {
+        json(res, 202, { status: "pending", request: publicFriendRequest(existingRequest) });
+        return;
+      }
+      const request = {
+        id: crypto.randomUUID(),
+        from: user.id,
+        to: target.id,
+        status: "pending",
+        createdAt: Date.now(),
+      };
+      db.friendRequests.push(request);
       saveDb(db);
-      json(res, 201, { contact: publicUser(target) });
+      json(res, 202, { status: "pending", request: publicFriendRequest(request) });
+      return;
+    }
+
+    if (req.method === "PATCH" && url.pathname.match(/^\/api\/friend-requests\/[^/]+$/)) {
+      const requestId = url.pathname.split("/")[3];
+      const request = db.friendRequests.find((item) => item.id === requestId && item.status === "pending");
+      if (!request || request.to !== user.id) {
+        json(res, 404, { error: "好友申请不存在。" });
+        return;
+      }
+      const body = await readBody(req);
+      const action = String(body.action || "").trim();
+      if (action === "accept") {
+        const sender = db.users.find((item) => item.id === request.from);
+        if (!sender) {
+          json(res, 404, { error: "申请人不存在。" });
+          return;
+        }
+        request.status = "accepted";
+        request.respondedAt = Date.now();
+        addMutualContact(user, sender);
+        saveDb(db);
+        json(res, 200, { status: "accepted", contact: publicUser(sender) });
+        return;
+      }
+      if (action === "reject") {
+        request.status = "rejected";
+        request.respondedAt = Date.now();
+        saveDb(db);
+        json(res, 200, { status: "rejected" });
+        return;
+      }
+      json(res, 400, { error: "请选择通过或拒绝。" });
       return;
     }
 
@@ -362,6 +541,7 @@ async function handleApi(req, res, url) {
       const groupId = String(body.groupId || "");
       const text = String(body.text || "").trim().slice(0, 1200);
       const stickerId = String(body.stickerId || "").trim().slice(0, 40);
+      const replyTo = String(body.replyTo || "").trim();
       const kind = stickerId ? "sticker" : "text";
       const content = stickerId || text;
       if (groupId) {
@@ -378,6 +558,7 @@ async function handleApi(req, res, url) {
           type: kind,
           text: kind === "text" ? text : "",
           stickerId,
+          replyTo: validReplyId(replyTo, groupChatId(group.id)),
           readBy: { [user.id]: Date.now() },
           createdAt: Date.now(),
         };
@@ -403,11 +584,84 @@ async function handleApi(req, res, url) {
         type: kind,
         text: kind === "text" ? text : "",
         stickerId,
+        replyTo: validReplyId(replyTo, conversationId(user.id, to)),
         createdAt: Date.now(),
       };
       db.messages.push(message);
       saveDb(db);
       json(res, 201, { message: decorateMessage(message) });
+      return;
+    }
+
+    if (req.method === "PATCH" && url.pathname.match(/^\/api\/messages\/[^/]+$/)) {
+      const messageId = url.pathname.split("/")[3];
+      const message = db.messages.find((item) => item.id === messageId);
+      if (!message || !canSeeMessage(user, message)) {
+        json(res, 404, { error: "消息不存在。" });
+        return;
+      }
+      if (message.from !== user.id || message.stickerId || message.deletedAt) {
+        json(res, 403, { error: "只能编辑自己发送的文字消息。" });
+        return;
+      }
+      const body = await readBody(req);
+      const text = String(body.text || "").trim().slice(0, 1200);
+      if (!text) {
+        json(res, 400, { error: "消息内容不能为空。" });
+        return;
+      }
+      message.text = text;
+      message.editedAt = Date.now();
+      saveDb(db);
+      json(res, 200, { message: decorateMessage(message) });
+      return;
+    }
+
+    if (req.method === "DELETE" && url.pathname.match(/^\/api\/messages\/[^/]+$/)) {
+      const messageId = url.pathname.split("/")[3];
+      const message = db.messages.find((item) => item.id === messageId);
+      if (!message || !canSeeMessage(user, message)) {
+        json(res, 404, { error: "消息不存在。" });
+        return;
+      }
+      if (message.from !== user.id) {
+        json(res, 403, { error: "只能撤回自己发送的消息。" });
+        return;
+      }
+      message.deletedAt = Date.now();
+      message.text = "";
+      message.stickerId = "";
+      message.type = "deleted";
+      saveDb(db);
+      json(res, 200, { message: decorateMessage(message) });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname.match(/^\/api\/messages\/[^/]+\/reactions$/)) {
+      const messageId = url.pathname.split("/")[3];
+      const message = db.messages.find((item) => item.id === messageId);
+      if (!message || !canSeeMessage(user, message) || message.deletedAt) {
+        json(res, 404, { error: "消息不存在。" });
+        return;
+      }
+      const body = await readBody(req);
+      const emoji = cleanReaction(body.emoji);
+      if (!emoji) {
+        json(res, 400, { error: "请选择一个反应。" });
+        return;
+      }
+      message.reactions ||= {};
+      message.reactions[emoji] ||= [];
+      if (message.reactions[emoji].includes(user.id)) {
+        message.reactions[emoji] = message.reactions[emoji].filter((id) => id !== user.id);
+      } else {
+        message.reactions[emoji].push(user.id);
+      }
+      Object.keys(message.reactions).forEach((key) => {
+        if (!message.reactions[key].length) delete message.reactions[key];
+      });
+      saveDb(db);
+      json(res, 200, { message: decorateMessage(message) });
       return;
     }
 
@@ -430,6 +684,45 @@ function cleanUsername(value) {
 
 function cleanName(value) {
   return String(value || "").trim().slice(0, 24);
+}
+
+function cleanStatus(value) {
+  return String(value || "").trim().slice(0, 32);
+}
+
+function cleanText(value, maxLength) {
+  return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
+}
+
+function cleanVideoQuery(value) {
+  return cleanText(value, 80) || "creative coding";
+}
+
+function cleanPageToken(value) {
+  return String(value || "").replace(/[^a-zA-Z0-9_\-]/g, "").slice(0, 120);
+}
+
+function cleanColor(value) {
+  const color = String(value || "").trim().toLowerCase();
+  return /^#[0-9a-f]{6}$/.test(color) ? color : randomColor();
+}
+
+function cleanReaction(value) {
+  const emoji = String(value || "").trim();
+  return ["👍", "❤️", "😂", "😮", "🙏", "🔥"].includes(emoji) ? emoji : "";
+}
+
+function validReplyId(messageId, chatId) {
+  if (!messageId) return "";
+  const message = db.messages.find((item) => item.id === messageId && item.chatId === chatId && !item.deletedAt);
+  return message ? message.id : "";
+}
+
+function canSeeMessage(user, message) {
+  if (message.groupId) {
+    return db.groups.some((group) => group.id === message.groupId && group.members.includes(user.id));
+  }
+  return message.from === user.id || message.to === user.id;
 }
 
 function randomColor() {
