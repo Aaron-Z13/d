@@ -5,5 +5,8 @@
   "description": "A small LAN chat app with accounts and private messages.",
   "scripts": {
     "start": "node server.js"
+  },
+  "dependencies": {
+    "web-push": "^3.6.7"
   }
 }
