@@ -1,0 +1,204 @@
+@media (max-width: 760px), (hover: none) and (pointer: coarse) and (max-width: 900px) {
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
+  body {
+    background: var(--bg);
+  }
+
+  .app {
+    width: 100vw;
+    height: 100dvh;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .auth-screen {
+    min-height: 100dvh;
+    padding: 18px;
+  }
+
+  .auth-card {
+    width: min(100%, 420px);
+    border-radius: 28px;
+  }
+
+  .chat-shell {
+    grid-template-columns: 1fr !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: rgba(18, 19, 23, 0.62);
+  }
+
+  body.light-theme .chat-shell {
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  .sidebar {
+    display: grid;
+    grid-template-rows: auto auto auto auto minmax(0, 1fr);
+    height: 100dvh !important;
+    min-height: 0 !important;
+    border-right: 0;
+  }
+
+  .profile {
+    padding: max(18px, env(safe-area-inset-top)) 16px 14px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .profile-actions {
+    gap: 8px;
+  }
+
+  .profile-actions button {
+    min-height: 38px;
+    padding: 0 12px;
+  }
+
+  .add-contact {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 10px 16px;
+  }
+
+  .section-title {
+    padding-inline: 16px;
+  }
+
+  .thread-search {
+    margin: 0 16px 12px;
+    width: calc(100% - 32px);
+  }
+
+  .contacts {
+    min-height: 0;
+    overflow: auto;
+    padding: 0 10px max(18px, env(safe-area-inset-bottom));
+  }
+
+  .conversation {
+    display: none;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto !important;
+  }
+
+  .chat-shell.in-chat .sidebar {
+    display: none;
+  }
+
+  .chat-shell.in-chat .conversation {
+    display: grid;
+  }
+
+  .chat-head {
+    min-height: 64px;
+    padding: max(12px, env(safe-area-inset-top)) 14px 12px;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+  }
+
+  .back-button {
+    display: block;
+    width: 38px;
+    height: 38px;
+    min-height: 38px;
+    padding: 0;
+    border-radius: 16px;
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  .chat-actions button {
+    min-height: 38px;
+    padding: 0 12px;
+  }
+
+  .message-search {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 10px 14px;
+  }
+
+  .messages {
+    min-height: 0 !important;
+    overflow: auto !important;
+    padding: 14px 12px;
+  }
+
+  .message {
+    max-width: 86%;
+  }
+
+  .bubble {
+    border-radius: 18px;
+    padding: 10px 12px;
+  }
+
+  .sticker-panel {
+    max-height: min(38dvh, 260px);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 12px;
+  }
+
+  .composer {
+    position: sticky !important;
+    bottom: 0 !important;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 10px 10px max(10px, env(safe-area-inset-bottom)) !important;
+    margin: 0 !important;
+    align-self: end !important;
+  }
+
+  .composer input {
+    height: 44px;
+    min-width: 0;
+    border-radius: 16px;
+  }
+
+  .sticker-toggle {
+    min-width: 58px;
+    height: 44px;
+    padding: 0 10px;
+  }
+
+  .composer .primary {
+    min-width: 58px;
+    height: 44px;
+    padding: 0 12px;
+  }
+
+  .settings-overlay,
+  .game-overlay,
+  .video-overlay,
+  .share-overlay,
+  .map-overlay {
+    padding: 0;
+  }
+
+  .settings-card,
+  .game-card,
+  .share-card,
+  .map-shell {
+    width: 100vw;
+    height: 100dvh;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .video-shell {
+    width: 100vw;
+    height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
+}
