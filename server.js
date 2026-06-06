@@ -4,12 +4,20 @@ const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
 const os = require("node:os");
+let webPush = null;
+
+try {
+  webPush = require("web-push");
+} catch {
+  webPush = null;
+}
 
 const port = Number(process.env.PORT || 3000);
 const publicDir = path.join(__dirname, "public");
 const dataDir = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(__dirname, "data");
 const dbPath = path.join(dataDir, "db.json");
 const youtubeApiKey = process.env.YOUTUBE_API_KEY || "";
+const vapidSubject = process.env.VAPID_SUBJECT || "mailto:mini-chat@example.com";
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -22,7 +30,7 @@ const mimeTypes = {
 };
 
 function emptyDb() {
-  return { users: [], sessions: {}, messages: [], groups: [], friendRequests: [] };
+  return { users: [], sessions: {}, messages: [], groups: [], friendRequests: [], pushSubscriptions: [], vapidKeys: null };
 }
 
 function loadDb() {
@@ -40,6 +48,8 @@ function normalizeDb(data) {
     messages: Array.isArray(data.messages) ? data.messages : [],
     groups: Array.isArray(data.groups) ? data.groups : [],
     friendRequests: Array.isArray(data.friendRequests) ? data.friendRequests : [],
+    pushSubscriptions: Array.isArray(data.pushSubscriptions) ? data.pushSubscriptions : [],
+    vapidKeys: data.vapidKeys && data.vapidKeys.publicKey && data.vapidKeys.privateKey ? data.vapidKeys : null,
   };
 }
 
@@ -49,6 +59,18 @@ function saveDb(db) {
 }
 
 let db = loadDb();
+
+function configureWebPush() {
+  if (!webPush) return false;
+  if (!db.vapidKeys) {
+    db.vapidKeys = webPush.generateVAPIDKeys();
+    saveDb(db);
+  }
+  webPush.setVapidDetails(vapidSubject, db.vapidKeys.publicKey, db.vapidKeys.privateKey);
+  return true;
+}
+
+configureWebPush();
 
 function hashPassword(password, salt = crypto.randomBytes(16).toString("hex")) {
   const hash = crypto.scryptSync(password, salt, 64).toString("hex");
@@ -79,6 +101,40 @@ function parseCookies(req) {
       .filter(([key, value]) => key && value)
       .map(([key, value]) => [key, decodeURIComponent(value)])
   );
+}
+
+function validPushSubscription(subscription) {
+  return Boolean(
+    subscription &&
+      typeof subscription === "object" &&
+      typeof subscription.endpoint === "string" &&
+      subscription.endpoint.startsWith("https://") &&
+      subscription.keys &&
+      typeof subscription.keys.p256dh === "string" &&
+      typeof subscription.keys.auth === "string"
+  );
+}
+
+function notificationBody(message) {
+  if (message.stickerId) return "发来一个表情";
+  return cleanText(message.text || "发来一条消息", 120);
+}
+
+function notifyMessageRecipients(userIds, payload) {
+  if (!configureWebPush()) return;
+  const targets = new Set(userIds.filter(Boolean));
+  if (!targets.size) return;
+  const subscriptions = db.pushSubscriptions.filter((item) => targets.has(item.userId));
+  subscriptions.forEach((item) => {
+    webPush
+      .sendNotification(item.subscription, JSON.stringify(payload))
+      .catch((error) => {
+        if (error.statusCode === 404 || error.statusCode === 410) {
+          db.pushSubscriptions = db.pushSubscriptions.filter((stored) => stored.subscription.endpoint !== item.subscription.endpoint);
+          saveDb(db);
+        }
+      });
+  });
 }
 
 function currentUser(req) {
@@ -277,6 +333,49 @@ async function handleApi(req, res, url) {
 
     if (req.method === "GET" && url.pathname === "/api/me") {
       json(res, 200, { user: publicUser(user) });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/push/public-key") {
+      if (!configureWebPush()) {
+        json(res, 503, { error: "服务器还没有安装后台推送组件。" });
+        return;
+      }
+      json(res, 200, { publicKey: db.vapidKeys.publicKey });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/push/subscribe") {
+      if (!configureWebPush()) {
+        json(res, 503, { error: "服务器还没有安装后台推送组件。" });
+        return;
+      }
+      const body = await readBody(req);
+      const subscription = body.subscription || body;
+      if (!validPushSubscription(subscription)) {
+        json(res, 400, { error: "推送订阅不正确。" });
+        return;
+      }
+      db.pushSubscriptions = db.pushSubscriptions.filter((item) => item.subscription.endpoint !== subscription.endpoint);
+      db.pushSubscriptions.push({
+        userId: user.id,
+        subscription,
+        createdAt: Date.now(),
+      });
+      saveDb(db);
+      json(res, 200, { ok: true });
+      return;
+    }
+
+    if (req.method === "DELETE" && url.pathname === "/api/push/subscribe") {
+      const body = await readBody(req).catch(() => ({}));
+      const endpoint = String(body.endpoint || "");
+      db.pushSubscriptions = db.pushSubscriptions.filter((item) => {
+        if (item.userId !== user.id) return true;
+        return endpoint && item.subscription.endpoint !== endpoint;
+      });
+      saveDb(db);
+      json(res, 200, { ok: true });
       return;
     }
 
@@ -564,6 +663,14 @@ async function handleApi(req, res, url) {
         };
         db.messages.push(message);
         saveDb(db);
+        notifyMessageRecipients(
+          group.members.filter((memberId) => memberId !== user.id),
+          {
+            title: `${group.name} · ${user.name}`,
+            body: notificationBody(message),
+            url: "/",
+          }
+        );
         json(res, 201, { message: decorateMessage(message) });
         return;
       }
@@ -589,6 +696,11 @@ async function handleApi(req, res, url) {
       };
       db.messages.push(message);
       saveDb(db);
+      notifyMessageRecipients([to], {
+        title: user.name || "Mini Chat 新消息",
+        body: notificationBody(message),
+        url: "/",
+      });
       json(res, 201, { message: decorateMessage(message) });
       return;
     }
