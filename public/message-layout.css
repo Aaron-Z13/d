@@ -1,0 +1,27 @@
+.message {
+  justify-items: start;
+}
+
+.message.mine {
+  justify-items: end;
+}
+
+.message:not(.mine) .bubble {
+  background: rgba(142, 142, 147, 0.18);
+  color: var(--ink);
+}
+
+.message.mine .bubble {
+  background: var(--green);
+  color: #061106;
+}
+
+body.light-theme .message:not(.mine) .bubble {
+  background: rgba(60, 60, 67, 0.1);
+  color: #15171c;
+}
+
+body.light-theme .message.mine .bubble {
+  background: #9ee8a2;
+  color: #082208;
+}
