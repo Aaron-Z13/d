@@ -1,0 +1,67 @@
+body.light-theme .settings-overlay {
+  background: rgba(232, 238, 246, 0.54);
+}
+
+body.light-theme .settings-card {
+  background: rgba(250, 252, 255, 0.9);
+  box-shadow: 0 34px 90px rgba(64, 75, 94, 0.2);
+}
+
+body.light-theme .settings-head,
+body.light-theme .settings-tabs {
+  background: rgba(250, 252, 255, 0.42);
+}
+
+body.light-theme .settings-tabs button {
+  background: rgba(255, 255, 255, 0.78);
+}
+
+body.light-theme .settings-tabs button.active {
+  border-color: rgba(50, 215, 75, 0.42);
+  background: rgba(50, 215, 75, 0.18);
+  color: var(--ink);
+}
+
+body.light-theme .color-grid button {
+  background: var(--swatch) !important;
+}
+
+body.light-theme .color-grid button.active {
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 0 0 2px rgba(12, 16, 24, 0.18),
+    0 10px 26px rgba(40, 50, 70, 0.16);
+}
+
+body.light-theme .profile-actions button,
+body.light-theme .chat-actions button,
+body.light-theme .sticker-toggle,
+body.light-theme .settings-head button {
+  background: rgba(255, 255, 255, 0.82);
+}
+
+body.light-theme input,
+body.light-theme textarea {
+  background: rgba(255, 255, 255, 0.82);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .auth-card,
+  .chat-shell,
+  .settings-card,
+  .game-card,
+  .video-shell,
+  .map-shell,
+  .composer,
+  .sticker-panel {
+    backdrop-filter: none;
+  }
+
+  .settings-overlay,
+  .game-overlay,
+  .video-overlay,
+  .share-overlay,
+  .map-overlay {
+    backdrop-filter: none;
+  }
+}
