@@ -27,21 +27,37 @@ body {
   box-shadow: none !important;
 }
 
-.sidebar,
-.conversation {
-  min-height: 0;
-}
-
-body.compact .chat-shell {
+.sidebar {
   height: 100dvh !important;
+  min-height: 0 !important;
 }
 
-@media (max-width: 760px) {
-  .chat-shell {
-    width: 100vw !important;
-    height: 100dvh !important;
-    margin: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-  }
+.conversation {
+  height: 100dvh !important;
+  min-height: 0 !important;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto !important;
+}
+
+.messages {
+  min-height: 0 !important;
+  overflow: auto !important;
+}
+
+.sticker-panel {
+  align-self: end !important;
+}
+
+.composer {
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 4;
+  align-self: end !important;
+  margin-top: 0 !important;
+  padding-bottom: max(18px, env(safe-area-inset-bottom)) !important;
+}
+
+body.compact .chat-shell,
+body.compact .sidebar,
+body.compact .conversation {
+  height: 100dvh !important;
 }
