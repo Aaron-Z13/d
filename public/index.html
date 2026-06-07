@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="mobile.css?v=2" />
     <link rel="stylesheet" href="browser-fixes.css?v=1" />
     <link rel="stylesheet" href="message-layout.css?v=1" />
+    <link rel="stylesheet" href="apps-panel.css?v=1" />
   </head>
   <body>
     <main class="app">
@@ -41,6 +42,7 @@
             </div>
             <div class="profile-actions">
               <button id="openSettingsButton" type="button" aria-label="设置">设置</button>
+              <button id="openAppsButton" type="button" aria-label="应用中心">应用</button>
               <button id="logoutButton" type="button">退出</button>
             </div>
           </header>
@@ -104,7 +106,6 @@
             <button type="button" data-settings-tab="friends">好友</button>
             <button type="button" data-settings-tab="appearance">外观</button>
             <button type="button" data-settings-tab="groups">群聊</button>
-            <button type="button" data-settings-tab="tools">工具</button>
           </nav>
 
           <section class="settings-panel active" data-settings-panel="profile">
@@ -175,27 +176,36 @@
               <button class="primary" type="submit">创建群聊</button>
             </form>
           </section>
+        </article>
+      </section>
 
-          <section class="settings-panel" data-settings-panel="tools">
-            <div class="tool-grid">
-              <button class="mini-game-button arcade-button" id="openArcadeButton" type="button">
-                <span>小游戏大厅</span>
-                <small>排行、挑战和 5 款游戏</small>
-              </button>
-              <button class="mini-game-button video-button" id="openVideoButton" type="button">
-                <span>Video Feed</span>
-                <small>YouTube 刷视频</small>
-              </button>
-              <button class="mini-game-button map-button" id="openMapButton" type="button">
-                <span>Google Maps</span>
-                <small>地图搜索</small>
-              </button>
-              <button class="mini-game-button gmail-button" id="openGmailButton" type="button">
-                <span>Gmail</span>
-                <small>打开邮箱</small>
-              </button>
+      <section class="apps-overlay hidden" id="appsOverlay" aria-label="应用中心">
+        <article class="apps-card">
+          <header class="apps-head">
+            <div>
+              <span>Mini Chat</span>
+              <h2>应用中心</h2>
             </div>
-          </section>
+            <button id="closeAppsButton" type="button">关闭</button>
+          </header>
+          <div class="tool-grid apps-grid">
+            <button class="mini-game-button arcade-button" id="openArcadeButton" type="button">
+              <span>小游戏大厅</span>
+              <small>排行、挑战和 5 款游戏</small>
+            </button>
+            <button class="mini-game-button video-button" id="openVideoButton" type="button">
+              <span>Video Feed</span>
+              <small>YouTube 刷视频</small>
+            </button>
+            <button class="mini-game-button map-button" id="openMapButton" type="button">
+              <span>Google Maps</span>
+              <small>地图搜索</small>
+            </button>
+            <button class="mini-game-button gmail-button" id="openGmailButton" type="button">
+              <span>Gmail</span>
+              <small>打开邮箱</small>
+            </button>
+          </div>
         </article>
       </section>
 
@@ -407,6 +417,7 @@
 
     <script src="message-compat.js?v=1"></script>
     <script src="app.js?v=16"></script>
+    <script src="apps-panel.js?v=1"></script>
     <script src="arcade.js?v=2"></script>
     <script src="push-notifications.js?v=1"></script>
     <script src="notification-badge.js?v=1"></script>
