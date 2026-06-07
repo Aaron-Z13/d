@@ -201,4 +201,28 @@
     border: 0;
     border-radius: 0;
   }
+
+  .arcade-grid,
+  .arcade-scoreboard,
+  .arcade-mini-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .arcade-tile {
+    min-height: 118px;
+  }
+
+  .arcade-leaderboard-head,
+  .arcade-play-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .arcade-leaderboard select {
+    width: 100%;
+  }
+
+  .arcade-stage {
+    min-height: 320px;
+  }
 }
