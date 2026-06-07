@@ -605,7 +605,7 @@ async function handleApi(req, res, url) {
         const messages = db.messages
           .filter((message) => message.chatId === chatId && message.createdAt > since)
           .slice(-160)
-          .map(decorateMessage);
+          .map((message) => decorateMessage(message, user.id));
         db.messages.forEach((message) => {
           if (message.chatId === chatId) {
             message.readBy ||= {};
@@ -625,7 +625,7 @@ async function handleApi(req, res, url) {
       const messages = db.messages
         .filter((message) => message.chatId === chatId && message.createdAt > since)
         .slice(-120)
-        .map(decorateMessage);
+        .map((message) => decorateMessage(message, user.id));
       db.messages.forEach((message) => {
         if (message.chatId === chatId && message.to === user.id) message.readAt ||= Date.now();
       });
@@ -671,7 +671,7 @@ async function handleApi(req, res, url) {
             url: "/",
           }
         );
-        json(res, 201, { message: decorateMessage(message) });
+        json(res, 201, { message: decorateMessage(message, user.id) });
         return;
       }
       if (!to || !user.contacts.includes(to) || !content) {
@@ -701,7 +701,7 @@ async function handleApi(req, res, url) {
         body: notificationBody(message),
         url: "/",
       });
-      json(res, 201, { message: decorateMessage(message) });
+      json(res, 201, { message: decorateMessage(message, user.id) });
       return;
     }
 
@@ -725,7 +725,7 @@ async function handleApi(req, res, url) {
       message.text = text;
       message.editedAt = Date.now();
       saveDb(db);
-      json(res, 200, { message: decorateMessage(message) });
+      json(res, 200, { message: decorateMessage(message, user.id) });
       return;
     }
 
@@ -745,7 +745,7 @@ async function handleApi(req, res, url) {
       message.stickerId = "";
       message.type = "deleted";
       saveDb(db);
-      json(res, 200, { message: decorateMessage(message) });
+      json(res, 200, { message: decorateMessage(message, user.id) });
       return;
     }
 
@@ -773,7 +773,7 @@ async function handleApi(req, res, url) {
         if (!message.reactions[key].length) delete message.reactions[key];
       });
       saveDb(db);
-      json(res, 200, { message: decorateMessage(message) });
+      json(res, 200, { message: decorateMessage(message, user.id) });
       return;
     }
 
@@ -880,15 +880,28 @@ function lastGroupMessage(groupId) {
     : null;
 }
 
+function findUserByAnyId(value) {
+  return db.users.find((item) => item.id === value || item.username === value) || null;
+}
+
 function senderName(userId) {
-  const user = db.users.find((item) => item.id === userId);
+  const user = findUserByAnyId(userId);
   return user?.name || "未知用户";
 }
 
-function decorateMessage(message) {
-  const user = db.users.find((item) => item.id === message.from);
+function decorateMessage(message, viewerId = "") {
+  const user = findUserByAnyId(message.from);
+  const viewer = findUserByAnyId(viewerId);
+  const isMine = Boolean(
+    viewer &&
+      (message.from === viewer.id ||
+        message.from === viewer.username ||
+        user?.id === viewer.id ||
+        user?.username === viewer.username)
+  );
   return {
     ...message,
+    isMine,
     senderName: user?.name || "未知用户",
     senderUsername: user?.username || "",
     senderColor: user?.color || "#0a84ff",
