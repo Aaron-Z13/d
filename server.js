@@ -30,7 +30,7 @@ const mimeTypes = {
 };
 
 function emptyDb() {
-  return { users: [], sessions: {}, messages: [], groups: [], friendRequests: [], pushSubscriptions: [], vapidKeys: null };
+  return { users: [], sessions: {}, messages: [], groups: [], friendRequests: [], pushSubscriptions: [], arcadeScores: [], vapidKeys: null };
 }
 
 function loadDb() {
@@ -49,6 +49,7 @@ function normalizeDb(data) {
     groups: Array.isArray(data.groups) ? data.groups : [],
     friendRequests: Array.isArray(data.friendRequests) ? data.friendRequests : [],
     pushSubscriptions: Array.isArray(data.pushSubscriptions) ? data.pushSubscriptions : [],
+    arcadeScores: Array.isArray(data.arcadeScores) ? data.arcadeScores : [],
     vapidKeys: data.vapidKeys && data.vapidKeys.publicKey && data.vapidKeys.privateKey ? data.vapidKeys : null,
   };
 }
@@ -463,6 +464,46 @@ async function handleApi(req, res, url) {
       return;
     }
 
+    if (req.method === "GET" && url.pathname === "/api/arcade/leaderboard") {
+      const game = cleanArcadeGame(url.searchParams.get("game") || "all");
+      const scope = new Set([user.id, ...(user.contacts || [])]);
+      const rows = db.arcadeScores
+        .filter((score) => (game === "all" || score.game === game) && scope.has(score.userId))
+        .map((score) => {
+          const owner = db.users.find((item) => item.id === score.userId);
+          return {
+            game: score.game,
+            score: Number(score.score || 0),
+            updatedAt: score.updatedAt || 0,
+            user: owner ? publicUser(owner) : { id: score.userId, name: "未知用户", username: "", color: "#8e8e93" },
+          };
+        })
+        .sort((a, b) => b.score - a.score || b.updatedAt - a.updatedAt)
+        .slice(0, 12);
+      json(res, 200, { game, rows });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/arcade/scores") {
+      const body = await readBody(req);
+      const game = cleanArcadeGame(body.game);
+      const score = Math.max(0, Math.floor(Number(body.score || 0)));
+      if (!game || !score) {
+        json(res, 400, { error: "游戏或分数不正确。" });
+        return;
+      }
+      const existing = db.arcadeScores.find((item) => item.userId === user.id && item.game === game);
+      if (existing) {
+        existing.score = Math.max(Number(existing.score || 0), score);
+        existing.updatedAt = Date.now();
+      } else {
+        db.arcadeScores.push({ userId: user.id, game, score, updatedAt: Date.now() });
+      }
+      saveDb(db);
+      json(res, 200, { ok: true, best: existing ? existing.score : score });
+      return;
+    }
+
     if (req.method === "POST" && url.pathname === "/api/contacts") {
       const body = await readBody(req);
       const target = db.users.find((item) => item.username === cleanUsername(body.username) || item.id === body.userId);
@@ -625,7 +666,7 @@ async function handleApi(req, res, url) {
       const messages = db.messages
         .filter((message) => message.chatId === chatId && message.createdAt > since)
         .slice(-120)
-        .map((message) => decorateMessage(message, user.id));
+          .map((message) => decorateMessage(message, user.id));
       db.messages.forEach((message) => {
         if (message.chatId === chatId && message.to === user.id) message.readAt ||= Date.now();
       });
@@ -822,6 +863,11 @@ function cleanColor(value) {
 function cleanReaction(value) {
   const emoji = String(value || "").trim();
   return ["👍", "❤️", "😂", "😮", "🙏", "🔥"].includes(emoji) ? emoji : "";
+}
+
+function cleanArcadeGame(value) {
+  const game = String(value || "").trim().toLowerCase();
+  return ["all", "fruit", "snake", "tap", "memory", "dodge"].includes(game) ? game : "";
 }
 
 function validReplyId(messageId, chatId) {
