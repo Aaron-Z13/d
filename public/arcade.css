@@ -1,0 +1,326 @@
+.arcade-button {
+  grid-column: 1 / -1;
+  min-height: 64px;
+  border-color: rgba(191, 90, 242, 0.35);
+  background:
+    radial-gradient(circle at 14% 24%, rgba(191, 90, 242, 0.24), transparent 28%),
+    radial-gradient(circle at 82% 22%, rgba(50, 215, 75, 0.16), transparent 26%),
+    rgba(255, 255, 255, 0.08);
+}
+
+.arcade-card {
+  width: min(100%, 980px);
+}
+
+.arcade-scoreboard,
+.arcade-mini-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.arcade-scoreboard div,
+.arcade-mini-stats div,
+.arcade-leaderboard {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.arcade-scoreboard div,
+.arcade-mini-stats div {
+  min-width: 0;
+  padding: 12px;
+  border-radius: 18px;
+}
+
+.arcade-scoreboard span,
+.arcade-scoreboard strong,
+.arcade-mini-stats span,
+.arcade-mini-stats strong,
+.arcade-tile span,
+.arcade-tile strong,
+.arcade-tile small,
+.arcade-leaderboard-head span,
+.arcade-leaderboard-head strong,
+.arcade-rank-player strong,
+.arcade-rank-player span,
+.arcade-rank-score strong,
+.arcade-rank-score span {
+  display: block;
+}
+
+.arcade-scoreboard span,
+.arcade-mini-stats span,
+.arcade-leaderboard-head span,
+.arcade-play-head span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.arcade-scoreboard strong,
+.arcade-mini-stats strong {
+  margin-top: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 19px;
+}
+
+.arcade-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.arcade-tile {
+  position: relative;
+  min-height: 150px;
+  overflow: hidden;
+  padding: 18px;
+  border-radius: 24px;
+  text-align: left;
+  isolation: isolate;
+}
+
+.arcade-tile::before {
+  content: "";
+  position: absolute;
+  inset: auto -24px -48px auto;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  filter: blur(6px);
+  z-index: -1;
+}
+
+.arcade-tile span {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.arcade-tile strong {
+  margin-top: 20px;
+  font-size: 24px;
+  line-height: 1.05;
+}
+
+.arcade-tile small {
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.fruit-tile {
+  background: linear-gradient(135deg, rgba(50, 215, 75, 0.34), rgba(255, 55, 95, 0.2));
+}
+
+.snake-tile {
+  background: linear-gradient(135deg, rgba(10, 132, 255, 0.34), rgba(50, 215, 75, 0.18));
+}
+
+.tap-tile {
+  background: linear-gradient(135deg, rgba(255, 159, 10, 0.36), rgba(191, 90, 242, 0.18));
+}
+
+.memory-tile {
+  background: linear-gradient(135deg, rgba(191, 90, 242, 0.34), rgba(100, 210, 255, 0.18));
+}
+
+.dodge-tile {
+  background: linear-gradient(135deg, rgba(255, 69, 58, 0.32), rgba(10, 132, 255, 0.18));
+}
+
+.arcade-leaderboard {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 22px;
+}
+
+.arcade-leaderboard-head,
+.arcade-play-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.arcade-leaderboard-head strong {
+  margin-top: 3px;
+  font-size: 18px;
+}
+
+.arcade-leaderboard select {
+  width: auto;
+  min-width: 150px;
+  height: 38px;
+}
+
+.arcade-ranks {
+  display: grid;
+  gap: 8px;
+}
+
+.arcade-rank {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.arcade-rank-number {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--soft);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.arcade-rank-player {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 9px;
+}
+
+.arcade-rank-player .avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 13px;
+}
+
+.arcade-rank-player strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arcade-rank-player span,
+.arcade-rank-score span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.arcade-rank-score {
+  text-align: right;
+}
+
+.arcade-rank-score strong {
+  font-size: 18px;
+}
+
+.arcade-play {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.arcade-play-head h3 {
+  margin: 3px 0 0;
+  font-size: 24px;
+}
+
+.arcade-play-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.arcade-stage {
+  position: relative;
+  min-height: 360px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(10, 132, 255, 0.18), transparent 28%),
+    radial-gradient(circle at 82% 22%, rgba(50, 215, 75, 0.14), transparent 26%),
+    #080b10;
+  touch-action: none;
+}
+
+.arcade-target {
+  position: absolute;
+  width: 72px;
+  height: 72px;
+  border: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 28%, #fff, rgba(255, 255, 255, 0.1) 24%),
+    linear-gradient(135deg, #32d74b, #0a84ff);
+  box-shadow: 0 18px 40px rgba(10, 132, 255, 0.35);
+}
+
+.memory-board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  height: 100%;
+  padding: 14px;
+}
+
+.memory-card {
+  min-height: 72px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.09);
+  font-size: 30px;
+}
+
+.memory-card.flipped,
+.memory-card.matched {
+  background: rgba(50, 215, 75, 0.22);
+}
+
+.dodge-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#arcadeHint {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 760px), (hover: none) and (pointer: coarse) and (max-width: 900px) {
+  .arcade-grid,
+  .arcade-scoreboard,
+  .arcade-mini-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .arcade-tile {
+    min-height: 118px;
+  }
+
+  .arcade-leaderboard-head,
+  .arcade-play-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .arcade-leaderboard select {
+    width: 100%;
+  }
+
+  .arcade-stage {
+    min-height: 320px;
+  }
+}
