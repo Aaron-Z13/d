@@ -1,0 +1,98 @@
+.profile-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.profile-actions button {
+  min-width: 54px;
+}
+
+.apps-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 28;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(3, 5, 8, 0.42);
+  backdrop-filter: blur(18px) saturate(150%);
+}
+
+.apps-card {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  width: min(100%, 640px);
+  max-height: min(720px, calc(100vh - 48px));
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 30px;
+  background: rgba(24, 25, 30, 0.82);
+  box-shadow: 0 32px 100px var(--shadow);
+  backdrop-filter: blur(26px) saturate(165%);
+}
+
+.apps-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.apps-head span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.apps-head h2 {
+  margin: 3px 0 0;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.apps-grid {
+  padding: 20px;
+}
+
+.settings-tabs {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+body.light-theme .apps-card {
+  background: rgba(255, 255, 255, 0.72);
+}
+
+@media (max-width: 760px), (hover: none) and (pointer: coarse) and (max-width: 900px) {
+  .profile-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .profile-actions button {
+    min-height: 38px;
+    padding: 0 8px;
+  }
+
+  .apps-overlay {
+    padding: 0;
+  }
+
+  .apps-card {
+    width: 100vw;
+    height: 100dvh;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .apps-grid {
+    grid-template-columns: 1fr;
+    align-content: start;
+    padding: 16px;
+  }
+}
