@@ -867,7 +867,7 @@ function cleanReaction(value) {
 
 function cleanArcadeGame(value) {
   const game = String(value || "").trim().toLowerCase();
-  return ["all", "fruit", "snake", "tap", "memory", "dodge"].includes(game) ? game : "";
+  return ["all", "fruit", "snake", "street", "tap", "memory", "dodge"].includes(game) ? game : "";
 }
 
 function validReplyId(messageId, chatId) {
