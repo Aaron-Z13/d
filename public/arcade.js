@@ -29,6 +29,7 @@
     dodge: "躲避方块",
     fruit: "Fruit Slasher",
     snake: "Snake",
+    street: "Street Guessr",
     all: "全部游戏",
   };
   let stats = loadStats();
