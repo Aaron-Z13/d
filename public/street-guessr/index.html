@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Street Guessr</title>
+    <link rel="stylesheet" href="style.css?v=1" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="topbar">
+        <div>
+          <p>Street Guessr</p>
+          <h1>街景猜位置</h1>
+        </div>
+        <div class="score-strip">
+          <div>
+            <span>Round</span>
+            <strong id="roundText">1 / 5</strong>
+          </div>
+          <div>
+            <span>Score</span>
+            <strong id="scoreText">0</strong>
+          </div>
+          <div>
+            <span>Best</span>
+            <strong id="bestText">0</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="setup" id="setupPanel">
+        <div class="file-warning hidden" id="fileWarning">
+          <strong>现在是 file:// 打开</strong>
+          <p>Google Maps API 通常要用 localhost 或正式网址。请用 http://localhost:3316/street-guessr/index.html 打开。</p>
+        </div>
+        <div>
+          <h2>选择地图</h2>
+          <p>先选一个地图包，再开始游戏。不同地图会从不同国家、城市或地标附近随机抽取街景。</p>
+        </div>
+        <label>
+          <span>Google Maps API Key</span>
+          <input id="apiKeyInput" autocomplete="off" placeholder="AIza..." />
+        </label>
+        <section class="map-gallery" id="mapGallery" aria-label="Map packs"></section>
+        <div class="setup-actions">
+          <button id="saveKeyButton" type="button">保存 Key</button>
+          <button id="startButton" type="button">开始游戏</button>
+        </div>
+      </section>
+
+      <section class="game hidden" id="gamePanel">
+        <div class="street-panel">
+          <div id="streetView"></div>
+          <div class="street-overlay">
+            <strong id="hintText">观察街景，然后在右边地图点一个位置。</strong>
+            <span>不能看地图定位，靠路牌、建筑、植被和道路风格判断。</span>
+          </div>
+        </div>
+        <aside class="guess-panel">
+          <div id="guessMap"></div>
+          <div class="guess-actions">
+            <button id="submitButton" type="button">提交猜测</button>
+            <button id="nextButton" class="hidden" type="button">下一回合</button>
+          </div>
+          <div class="result" id="resultBox">
+            <span>结果</span>
+            <strong>先在地图上点一个位置</strong>
+            <p>提交后会显示真实位置、距离和本回合得分。</p>
+          </div>
+        </aside>
+      </section>
+
+      <section class="end-modal hidden" id="endModal">
+        <div class="end-card">
+          <span>Game Over</span>
+          <h2 id="endTitle">总分 0</h2>
+          <p id="endText">这一局结束了。</p>
+          <div class="end-actions">
+            <button id="playAgainButton" type="button">再来一局</button>
+            <button id="backToMapsButton" type="button">返回地图选择</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js?v=1"></script>
+  </body>
+</html>
