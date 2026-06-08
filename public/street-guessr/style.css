@@ -1,0 +1,473 @@
+:root {
+  color-scheme: dark;
+  --bg: #070a12;
+  --panel: rgba(17, 21, 33, 0.74);
+  --line: rgba(255, 255, 255, 0.13);
+  --ink: rgba(255, 255, 255, 0.96);
+  --soft: rgba(255, 255, 255, 0.64);
+  --blue: #4c9fff;
+  --green: #64d26e;
+  --yellow: #ffd166;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 18% 14%, rgba(76, 159, 255, 0.2), transparent 30%),
+    radial-gradient(circle at 80% 10%, rgba(100, 210, 110, 0.13), transparent 28%),
+    linear-gradient(180deg, #111827, var(--bg));
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  min-height: 46px;
+  padding: 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--ink);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+button:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.app {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  width: min(1400px, calc(100vw - 24px));
+  height: min(900px, calc(100vh - 24px));
+  margin: 12px auto;
+  gap: 12px;
+}
+
+.topbar,
+.setup,
+.game,
+.result {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(24px) saturate(150%);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 18px;
+  border-radius: 28px;
+}
+
+.topbar p,
+.score-strip span,
+.result span,
+label span {
+  margin: 0;
+  color: var(--soft);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.topbar h1 {
+  margin: 3px 0 0;
+  font-size: clamp(32px, 5vw, 56px);
+  line-height: 1;
+}
+
+.score-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(90px, 1fr));
+  gap: 10px;
+}
+
+.score-strip div {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.score-strip strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 22px;
+}
+
+.setup {
+  display: grid;
+  width: 100%;
+  place-self: center;
+  gap: 18px;
+  padding: 28px;
+  border-radius: 30px;
+  overflow: auto;
+}
+
+.setup h2 {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 48px);
+}
+
+.file-warning {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 209, 102, 0.42);
+  border-radius: 18px;
+  background: rgba(255, 209, 102, 0.12);
+}
+
+.file-warning strong {
+  color: var(--yellow);
+}
+
+.file-warning p {
+  margin: 0;
+}
+
+.setup p {
+  margin: 8px 0 0;
+  color: var(--soft);
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+}
+
+input {
+  width: 100%;
+  min-height: 50px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  outline: 0;
+}
+
+input:focus {
+  border-color: rgba(76, 159, 255, 0.8);
+}
+
+.setup-actions,
+.guess-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.map-gallery {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.map-card {
+  position: relative;
+  display: grid;
+  min-height: 190px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, transparent 38%, rgba(0, 0, 0, 0.72)),
+    var(--cover);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.26);
+}
+
+.map-card::before {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.2), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 48%);
+  content: "";
+}
+
+.map-card.active {
+  border-color: rgba(100, 210, 110, 0.92);
+  box-shadow: 0 0 0 3px rgba(100, 210, 110, 0.22), 0 22px 58px rgba(0, 0, 0, 0.32);
+}
+
+.map-card-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  align-content: end;
+  min-height: 190px;
+  padding: 16px;
+  text-align: left;
+}
+
+.map-card h3 {
+  margin: 0;
+  font-size: clamp(22px, 2vw, 30px);
+  line-height: 1;
+  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.58);
+}
+
+.map-card p {
+  margin: 8px 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.map-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.difficulty {
+  display: inline-grid;
+  place-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.42);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bars {
+  display: inline-flex;
+  align-items: end;
+  gap: 3px;
+}
+
+.bars i {
+  display: block;
+  width: 5px;
+  border-radius: 999px;
+  background: var(--yellow);
+}
+
+.bars i:nth-child(1) {
+  height: 8px;
+}
+
+.bars i:nth-child(2) {
+  height: 13px;
+}
+
+.bars i:nth-child(3) {
+  height: 18px;
+}
+
+.bars i.muted {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+#startButton,
+#submitButton {
+  border: 0;
+  background: linear-gradient(135deg, var(--green), var(--blue));
+  color: #061018;
+}
+
+.game {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 30px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.street-panel {
+  position: relative;
+  min-height: 0;
+  border-right: 1px solid var(--line);
+}
+
+#streetView,
+#guessMap {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+}
+
+.street-overlay {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  display: grid;
+  gap: 4px;
+  max-width: 520px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: rgba(7, 10, 18, 0.66);
+  backdrop-filter: blur(18px);
+}
+
+.street-overlay span {
+  color: var(--soft);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.guess-panel {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  min-height: 0;
+  gap: 12px;
+  padding: 12px;
+}
+
+#guessMap {
+  overflow: hidden;
+  border-radius: 22px;
+}
+
+.result {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 20px;
+  box-shadow: none;
+}
+
+.result strong {
+  font-size: 20px;
+}
+
+.result p {
+  margin: 0;
+  color: var(--soft);
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.end-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(16px);
+}
+
+.end-card {
+  display: grid;
+  width: min(520px, 100%);
+  gap: 14px;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: rgba(17, 21, 33, 0.92);
+  box-shadow: 0 32px 110px rgba(0, 0, 0, 0.52);
+}
+
+.end-card span {
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.end-card h2 {
+  margin: 0;
+  font-size: clamp(34px, 6vw, 56px);
+  line-height: 1;
+}
+
+.end-card p {
+  margin: 0;
+  color: var(--soft);
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.end-actions {
+  display: flex;
+  gap: 10px;
+}
+
+#playAgainButton {
+  border: 0;
+  background: linear-gradient(135deg, var(--green), var(--blue));
+  color: #061018;
+}
+
+@media (max-width: 900px) {
+  .app {
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+  }
+
+  .topbar {
+    align-items: stretch;
+    flex-direction: column;
+    border-radius: 0;
+  }
+
+  .game {
+    grid-template-columns: 1fr;
+    overflow: auto;
+    border-radius: 0;
+  }
+
+  .street-panel {
+    height: 55vh;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .guess-panel {
+    min-height: 520px;
+  }
+
+  .map-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .map-gallery {
+    grid-template-columns: 1fr;
+  }
+}
